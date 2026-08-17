@@ -12,7 +12,7 @@ setInterval(()=>{
   else if(ASTRA.save.carried!==c){setG(V.credits,ASTRA.save.carried);prev=ASTRA.save.carried;}
 },400);
 
-/* 2) смерть: экран «💀 ПОГИБ» → монеты в банк, вещи в точку смерти */
+/* 2) смерть: монеты в банк, вещи в точку смерти */
 let deathMarked=false;
 setInterval(()=>{
   const dead=[...document.querySelectorAll('*')].some(el=>el.childElementCount===0&&/ПОГИБ/.test(el.textContent||'')&&vis(el));
@@ -23,10 +23,26 @@ setInterval(()=>{
     if(Array.isArray(inv))inv.length=0;
     msg('💀 Груз остался в точке гибели — ищи маяк');
   }
-  if(!dead)deathMarked=false;
+  if(dead) injectSiteBtn(); else {deathMarked=false; removeSiteBtn();}
 },500);
 
-/* 3) респавн: кнопка «ВОЗРОДИТЬСЯ» → случайная точка + маяк смерти */
+/* 2.5) кнопка выхода на сайт на экране смерти */
+function injectSiteBtn(){
+  if(document.getElementById('astraSiteBtn'))return;
+  const cands=[...document.querySelectorAll('*')].filter(el=>(el.textContent||'').includes('ВОЗРОДИТЬСЯ')&&vis(el));
+  if(!cands.length)return;
+  const smallest=cands.sort((a,b)=>a.textContent.length-b.textContent.length)[0];
+  const anchor=smallest.closest('button,[onclick],a')||smallest;
+  const b=document.createElement('button');
+  b.id='astraSiteBtn';
+  b.innerHTML='🌐 ВЕРНУТЬСЯ НА САЙТ';
+  b.style.cssText='display:block;margin:12px auto 0;padding:12px 28px;background:rgba(10,16,32,.85);border:1px solid #4de3ff88;border-radius:10px;color:#9fdcff;font:700 14px monospace;letter-spacing:.12em;cursor:pointer;box-shadow:0 0 14px #4de3ff33';
+  b.onclick=e=>{e.stopPropagation();location.href='index.html';};
+  anchor.insertAdjacentElement('afterend',b);
+}
+function removeSiteBtn(){const b=document.getElementById('astraSiteBtn');if(b)b.remove();}
+
+/* 3) респавн: случайная точка + маяк смерти */
 document.addEventListener('click',e=>{
   const t=e.target.closest('button,div');
   if(t&&/ВОЗРОДИТЬСЯ/.test(t.textContent||''))setTimeout(()=>{
