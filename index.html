@@ -226,6 +226,55 @@ footer{border-top:1px solid var(--line);padding:34px 4vw;display:flex;justify-co
 </style>
 </head>
 <body>
+  <style>
+.img-art{width:100%;height:190px;border-radius:12px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative;overflow:hidden}
+.img-art span{filter:drop-shadow(0 0 18px currentColor);z-index:1}
+.art-scout{background:
+  radial-gradient(circle at 50% 45%,rgba(77,227,255,.5),transparent 60%),
+  repeating-linear-gradient(90deg,transparent 0 34px,rgba(77,227,255,.35) 34px 38px),
+  linear-gradient(160deg,#233450,#0d1526 70%)}
+.art-nebula{background:
+  radial-gradient(circle at 30% 40%,rgba(160,107,255,.65),transparent 55%),
+  radial-gradient(circle at 70% 60%,rgba(255,255,255,.18),transparent 40%),#0a0714}
+.art-singularity{background:
+  radial-gradient(circle at 50% 45%,rgba(255,194,77,.75),transparent 45%),
+  conic-gradient(from 0deg,transparent 0 70%,rgba(255,150,60,.5) 75%,transparent 80%),#120b04}
+.hero-art .img-art{position:absolute;inset:0;height:100%;margin:0;border-radius:0;font-size:0;background:
+  radial-gradient(ellipse at 68% 30%,rgba(160,107,255,.5),transparent 50%),
+  radial-gradient(ellipse at 30% 70%,rgba(77,227,255,.25),transparent 55%)}
+.hero-art .img-art::before{content:'';position:absolute;left:62%;top:52%;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#cfe0ff,#5a86c8 60%,#16233f 90%);box-shadow:0 0 60px rgba(120,170,255,.5)}
+.hero-art .img-art::after{content:'';position:absolute;left:55%;top:60%;width:340px;height:90px;border:2px solid rgba(200,220,255,.45);border-radius:50%;transform:rotate(-18deg)}
+</style>
+<script>
+(function(){
+  const MAP={
+    'hero':['assets/hero.png','assets/hero.jpg','assets/hero.jpeg','assets/hero.webp','hero.png','hero.jpg','img/hero.png','images/hero.png'],
+    'case-scout':['assets/case-scout.png','assets/case-scout.jpg','case-scout.png','case-scout.jpg','img/case-scout.png'],
+    'case-nebula':['assets/case-nebula.png','assets/case-nebula.jpg','case-nebula.png','case-nebula.jpg','img/case-nebula.png'],
+    'case-singularity':['assets/case-singularity.png','assets/case-singularity.jpg','case-singularity.png','case-singularity.jpg','img/case-singularity.png']
+  };
+  const ART={'hero':'','case-scout':'art-scout','case-nebula':'art-nebula','case-singularity':'art-singularity'};
+  const EMO={'hero':'','case-scout':'📦','case-nebula':'🧰','case-singularity':'🔆'};
+  const key=s=>{for(const k in MAP)if(s.includes(k))return k;return null;};
+  document.querySelectorAll('img').forEach(im=>{
+    const k=key(im.getAttribute('src')||''); if(!k)return;
+    const list=MAP[k]; let i=0;
+    (function next(){
+      if(i>=list.length){
+        const d=document.createElement('div');
+        d.className='img-art '+ART[k];
+        d.innerHTML='<span>'+EMO[k]+'</span>';
+        im.replaceWith(d); return;
+      }
+      const t=new Image();
+      t.onload=()=>{im.src=list[i-1];};
+      t.onerror=next;
+      t.src=list[i++];
+    })();
+  });
+})();
+</script>
 
 <canvas id="stars"></canvas>
 <div class="vignette"></div>
