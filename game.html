@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Звёздный Странник v7.6</title>
+<style>
+:root{--acc:#35e0ff;--acc2:#ffb020;--glass:rgba(10,18,30,.72)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Segoe UI',system-ui,sans-serif;color:#dfe9f5;user-select:none}
+#cv{position:fixed;inset:0;transition:filter .5s}
+#cv.visorOn{filter:brightness(.72) contrast(1.25) saturate(.4) sepia(.25) hue-rotate(165deg)}
+#cv.glitch{animation:glitchShake .08s steps(2) infinite}
+@keyframes glitchShake{0%{transform:translate(0,0) skewX(0)}50%{transform:translate(-2px,1px) skewX(-.5deg)}100%{transform:translate(1px,-1px) skewX(.3deg)}}
+.hud{position:fixed;pointer-events:none;z-index:10}
+.panel{background:var(--glass);border:1px solid rgba(90,200,255,.25);border-radius:12px;backdrop-filter:blur(8px);box-shadow:0 4px 24px rgba(0,0,0,.45)}
+#stats{top:14px;left:14px;padding:12px 14px;width:264px;font-size:13px}
+.bar{margin:6px 0}.bar .lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.track{height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.fill{height:100%;border-radius:5px;transition:width .15s}
+#hpF{background:linear-gradient(90deg,#ff5f6d,#ffb199)}
+#kiF{background:linear-gradient(90deg,#3a7fd5,#35e0ff)}
+#jpF{background:linear-gradient(90deg,#f7971e,#ffd200)}
+#huF{background:linear-gradient(90deg,#35e08f,#7fff9a)}
+#credits,#equip{margin-top:8px;font-size:12.5px;color:#bcd6ea}
+#abilities{bottom:86px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.ab{width:54px;height:54px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;background:var(--glass);border:1px solid rgba(90,200,255,.3);position:relative;overflow:hidden}
+.ab .ico{font-size:17px}.ab .cost{font-size:9px;color:#8fd8ff}
+.ab .cd{position:absolute;inset:0;background:rgba(0,10,20,.82);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--acc);opacity:0}
+#weapons{bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.wp{width:66px;padding:6px 3px;text-align:center;border-radius:10px;background:var(--glass);border:1px solid rgba(90,200,255,.18);font-size:10px;transition:.2s}
+.wp .n{font-size:15px}
+.wp.on{border-color:var(--acc);box-shadow:0 0 14px #35e0ff55;background:rgba(20,60,80,.8);transform:translateY(-4px)}
+.wp.legend{border-color:rgba(255,210,94,.6)}
+#planetInfo{top:14px;right:14px;padding:12px 16px;font-size:13px;min-width:210px}
+#planetInfo b{color:var(--acc);font-size:14px}
+#btnRow{top:130px;right:14px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.actBtn{pointer-events:auto;cursor:pointer;padding:9px 18px;border-radius:9px;font-size:13px;letter-spacing:1px;border:1px solid rgba(90,200,255,.4);background:rgba(12,26,40,.85);color:#dfe9ff;backdrop-filter:blur(6px);transition:.2s}
+.actBtn:hover{background:rgba(53,224,255,.25);box-shadow:0 0 16px #35e0ff55}
+.actBtn.on{border-color:var(--acc2);color:var(--acc2)}
+#camBtn{border-color:rgba(143,216,255,.6)}
+#launchBtn{display:none;border-color:#7fff9a;color:#c8ffdb;font-size:14px;font-weight:600}
+#mission{top:54px;left:50%;transform:translateX(-50%);padding:8px 24px;font-size:13.5px;border-color:rgba(255,210,94,.55);color:#ffe9b0;text-align:center}
+#beaconPanel{top:196px;left:50%;transform:translateX(-50%);text-align:center;padding:9px 18px;display:none;border-color:rgba(255,176,32,.55)}
+#beaconInfo{font-size:13px;color:#ffd25e}
+#beaconBtns{margin-top:7px;display:flex;gap:8px;justify-content:center}
+#pbar{top:100px;left:50%;transform:translateX(-50%);width:560px;padding:10px 18px 13px;display:none;border-color:rgba(255,120,60,.5)}
+#pbar .pbName{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:#ffd9c0}
+#pbar .pbName b{color:#ff9a5e}
+#pbar .pbTrack{height:16px;border-radius:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,140,70,.35);overflow:hidden}
+#pbar .pbFill{height:100%;background:linear-gradient(90deg,#ff3b30,#ff9a3c,#ffd25e);transition:width .12s}
+#warTimer{top:150px;left:50%;transform:translateX(-50%);padding:8px 24px;font-size:17px;border-color:#ff2244;color:#ff7585;display:none;animation:wpulse 1s infinite;letter-spacing:2px}
+@keyframes wpulse{50%{box-shadow:0 0 24px #ff2244}}
+#radarBox{bottom:16px;right:16px;width:148px;height:148px;border-radius:50%;padding:0;overflow:hidden}
+#perf{bottom:16px;left:16px;padding:5px 12px;font-size:11px;color:#8fd8ff;font-family:Consolas,monospace}
+#toasts{bottom:46px;left:16px;display:flex;flex-direction:column;gap:5px}
+.toast{padding:6px 14px;font-size:12.5px;border-radius:8px;background:rgba(10,20,32,.88);border:1px solid rgba(90,200,255,.3);border-left:3px solid var(--acc);animation:tin .3s ease,tout .5s ease 2.4s forwards}
+@keyframes tin{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes tout{to{transform:translateX(-20px);opacity:0}}
+#cross{top:50%;left:50%;transform:translate(-50%,-50%);width:22px;height:22px}
+#cross::before,#cross::after{content:'';position:absolute;background:#bfeaff;box-shadow:0 0 6px #35e0ff}
+#cross::before{left:10px;top:0;width:2px;height:22px}
+#cross::after{top:10px;left:0;height:2px;width:22px}
+#cross.hitmark::before,#cross.hitmark::after{background:#ff5566;box-shadow:0 0 12px #ff5566}
+#prompt{bottom:170px;left:50%;transform:translateX(-50%);padding:8px 18px;font-size:14px;border-radius:8px;display:none}
+#prompt b{color:var(--acc2)}
+#banner{top:96px;left:50%;transform:translateX(-50%);padding:10px 28px;font-size:15px;opacity:0;transition:opacity .4s}
+#tut{top:14px;left:50%;transform:translateX(-50%);padding:7px 20px;font-size:13px;border-radius:20px;color:#cfe9ff}
+#dmg{inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(255,30,50,.55));opacity:0;pointer-events:none}
+#lowhp{inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(255,0,30,.4));opacity:0;pointer-events:none}
+#lowhp.on{animation:lowhpPulse 1.1s ease-in-out infinite}
+@keyframes lowhpPulse{0%,100%{opacity:.35}50%{opacity:1}}
+#storm{inset:0;background:radial-gradient(ellipse at center,rgba(120,80,255,.12),rgba(70,30,160,.4));opacity:0;pointer-events:none}
+#visorOv{inset:0;opacity:0;transition:opacity .5s;background:radial-gradient(ellipse at center,rgba(0,30,45,0) 40%,rgba(0,8,16,.9) 100%),repeating-linear-gradient(0deg,rgba(120,255,255,.03) 0 2px,transparent 2px 4px);pointer-events:none}
+#vignetteOv{inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.55) 100%);opacity:1;pointer-events:none}
+#scanlineOv{inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.09) 3px 4px);opacity:.35;pointer-events:none;mix-blend-mode:multiply}
+#whiteOv{inset:0;background:#eaffff;opacity:0;transition:opacity .35s;z-index:48;pointer-events:none}
+#fade{inset:0;background:#000;opacity:0;transition:opacity .45s;z-index:50;pointer-events:none}
+#plasma{inset:0;opacity:0;z-index:49;background:radial-gradient(ellipse at center,#ffdf8a 0%,#ff7b2d 40%,#7a1a05 100%);mix-blend-mode:screen;pointer-events:none}
+.screen{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,6,14,.86);backdrop-filter:blur(10px)}
+.screen h1{font-size:52px;letter-spacing:14px;color:#fff;text-shadow:0 0 30px var(--acc);margin-bottom:6px}
+.screen h2{font-size:14px;letter-spacing:6px;color:var(--acc);margin-bottom:28px;font-weight:400}
+.ctrls{display:grid;grid-template-columns:auto auto;gap:7px 22px;font-size:14px;color:#a9c6dd;margin-bottom:26px}
+.ctrls b{color:#fff;background:rgba(90,200,255,.12);border:1px solid rgba(90,200,255,.3);border-radius:5px;padding:1px 9px;font-size:12px}
+.qcs{display:flex;gap:10px;margin-bottom:26px}
+.qc{pointer-events:auto;cursor:pointer;padding:7px 22px;border-radius:8px;border:1px solid rgba(90,200,255,.3);background:rgba(255,255,255,.04);font-size:13px;letter-spacing:2px;color:#a9c6dd}
+.qc.on{border-color:var(--acc);color:#fff;background:rgba(53,224,255,.18)}
+.btn{pointer-events:auto;cursor:pointer;font-size:17px;letter-spacing:3px;padding:15px 52px;border-radius:10px;border:1px solid var(--acc);background:linear-gradient(180deg,rgba(53,224,255,.18),rgba(53,224,255,.05));color:#fff;transition:.2s}
+.btn:hover{background:rgba(53,224,255,.3);box-shadow:0 0 30px #35e0ff66}
+.btnSm{pointer-events:auto;cursor:pointer;font-size:12px;letter-spacing:2px;padding:8px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#9fb8cc;margin-top:16px}
+.btnSm:hover{color:#fff;border-color:#fff}
+#deathS h1{color:#ff6b7d;text-shadow:0 0 40px #ff4757}
+#cutS{background:#020409;display:none}
+#cutCv{position:absolute;inset:0}
+.cutBar{position:absolute;left:0;right:0;height:11%;background:#000;z-index:5}
+#cutTitle{position:absolute;top:34%;width:100%;text-align:center;opacity:0;transition:opacity 1s;z-index:6}
+#cutTitle h1{font-size:56px;letter-spacing:18px;color:#fff;text-shadow:0 0 40px var(--acc)}
+#cutTitle h2{color:var(--acc);letter-spacing:8px;font-size:14px;margin-top:10px}
+#cutLines{position:absolute;bottom:16%;width:100%;text-align:center;z-index:6}
+.cutLine{font-size:19px;letter-spacing:1px;color:#dfe9f5;margin:6px 0;opacity:0;transition:opacity .6s;text-shadow:0 2px 12px #000}
+.cutLine.red{color:#ff7585}.cutLine.gold{color:#ffd25e}.cutLine.green{color:#7dff9e}
+#cutMission{position:absolute;top:40%;width:100%;text-align:center;opacity:0;transition:opacity .8s;z-index:6}
+#cutMission .m1{font-size:15px;letter-spacing:6px;color:#8fd8ff;margin-bottom:12px}
+#cutMission .m2{font-size:30px;letter-spacing:4px;color:#ffd25e;text-shadow:0 0 24px #ffd25e66}
+#skipBtn{position:absolute;top:13%;right:24px;z-index:8}
+#winS h1{color:#7fff9a;text-shadow:0 0 40px #7fff9a}
+#invS,#stationS{display:none}
+#invBox,#stBox{width:1000px;max-height:90vh;overflow:auto;padding:26px 30px;position:relative;background:linear-gradient(160deg,rgba(5,11,20,.985),rgba(11,22,40,.97) 55%,rgba(6,14,26,.985));border:1px solid rgba(90,200,255,.55);box-shadow:0 0 90px rgba(53,224,255,.2)}
+.uiHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid rgba(90,200,255,.2)}
+.uiHead h3{color:#fff;letter-spacing:6px;font-size:18px;text-transform:uppercase}
+.uiHead h3 span{color:var(--acc)}
+.sub{font-size:12px;color:#7fa2bd}
+.invCr{font-family:Consolas,monospace;color:#ffd25e;font-size:17px}
+.secTitle{font-size:11px;letter-spacing:5px;color:#7fb0d0;margin:20px 0 12px;display:flex;align-items:center;gap:10px;text-transform:uppercase;font-weight:600}
+.secTitle::before{content:'◈';color:var(--acc)}
+.secTitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(90,200,255,.5),transparent)}
+.invCols{display:flex;gap:24px}
+.invLeft{width:330px;flex-shrink:0}
+.invRight{flex:1}
+#invEquip{display:flex;gap:14px;justify-content:space-between}
+.eqWrap{text-align:center}
+.eqHex{width:60px;height:68px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(180deg,rgba(53,224,255,.16),rgba(53,224,255,.03));display:flex;align-items:center;justify-content:center;position:relative}
+.eqHex .ei{font-size:26px}
+.eqHex .lv{position:absolute;bottom:10px;font-size:10px;font-weight:700;color:#8fd8ff}
+.eqHex.gold{background:linear-gradient(180deg,rgba(255,210,94,.22),rgba(255,210,94,.04))}
+.eqLabel{font-size:9px;letter-spacing:2px;color:#7fa2bd;margin-top:6px}
+#invGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.slot{height:80px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.16s;pointer-events:auto;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+.slot .rbar{position:absolute;top:0;left:0;right:0;height:3px}
+.slot .ic{font-size:32px}
+.slot .cnt{position:absolute;bottom:5px;right:10px;font-size:12px;font-weight:700;color:#fff}
+.slot:hover{transform:translateY(-5px) scale(1.04);filter:brightness(1.35)}
+.slot.empty{cursor:default;opacity:.4}
+.slot.empty:hover{transform:none;filter:none}
+.slot.empty .ic{font-size:14px;color:#40566a}
+.slot.r0{border:1px solid #5a6a78}
+.slot.r1{border:1px solid #35a0ff}
+.slot.r2{border:1px solid #b060ff}
+.slot.r3{border:1px solid #ffd25e;animation:legGlow 2s ease-in-out infinite}
+@keyframes legGlow{50%{box-shadow:inset 0 0 34px rgba(255,210,94,.55)}}
+.slot.sel{outline:2px solid var(--acc)}
+#invDetail{position:relative;padding:0;min-height:280px;font-size:13px;overflow:hidden;background:linear-gradient(180deg,rgba(53,224,255,.05),rgba(0,0,0,.3));border:1px solid rgba(90,200,255,.3)}
+.holo{position:relative;height:120px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(53,224,255,.14),transparent 70%);overflow:hidden;border-bottom:1px solid rgba(90,200,255,.2)}
+.holo .hIcon{font-size:60px;animation:holoFloat 2.6s ease-in-out infinite}
+@keyframes holoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}
+.dBody{padding:14px 16px}
+.dBody .nm{font-size:17px;font-weight:700}
+.dBody .rar{display:inline-block;font-size:9px;letter-spacing:3px;padding:2px 8px;margin:6px 0 10px;border:1px solid currentColor;border-radius:3px}
+.dBody .ds{color:#9fb8cc;font-size:12px;line-height:1.6;margin-bottom:14px}
+.dBody .acts{display:flex;gap:8px;flex-wrap:wrap}
+.gbtn{pointer-events:auto;cursor:pointer;position:relative;padding:9px 20px;font-size:12px;letter-spacing:2px;color:#dff6ff;text-transform:uppercase;border:1px solid var(--acc);background:linear-gradient(180deg,rgba(53,224,255,.2),rgba(53,224,255,.05));transition:.15s}
+.gbtn:hover:not(:disabled){background:rgba(53,224,255,.35)}
+.gbtn:disabled{opacity:.35;cursor:default}
+.gbtn.gold{border-color:#ffd25e;color:#ffe9b0;background:linear-gradient(180deg,rgba(255,210,94,.22),rgba(255,210,94,.05))}
+#recipes{max-height:280px;overflow:auto;padding-right:6px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cCard{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(90,200,255,.16)}
+.cCard .cn{font-size:13px;font-weight:600}
+.cCard .mats{font-size:11px;font-family:Consolas,monospace;color:#7fa2bd}
+.cCard .mats .ok{color:#7fff9a}.cCard .mats .no{color:#ff7585}
+#codexList{max-height:160px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.codexItem{padding:8px 12px;background:rgba(176,96,255,.07);border:1px solid rgba(176,96,255,.25);border-radius:6px;font-size:12px}
+.codexItem b{color:#d0a0ff}
+.codexItem p{color:#9fb8cc;margin-top:3px}
+.stCols{display:flex;gap:24px}.stCol{flex:1}
+.stShip{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;margin-bottom:9px;background:rgba(255,255,255,.04);border:1px solid rgba(90,200,255,.18)}
+.stShip small{color:#7fa2bd}
+.stShip .ok{color:#7fff9a;font-size:11px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud panel" id="stats">
+<div class="bar"><div class="lbl"><span>❤ Здоровье</span><span id="hpT">100 / 100</span></div><div class="track"><div class="fill" id="hpF" style="width:100%"></div></div></div>
+<div class="bar"><div class="lbl"><span>⚡ Ки-Энергия</span><span id="kiT">100 / 100</span></div><div class="track"><div class="fill" id="kiF" style="width:100%"></div></div></div>
+<div class="bar"><div class="lbl"><span>🚀 Джетпак</span><span id="jpT">100 / 100</span></div><div class="track"><div class="fill" id="jpF" style="width:100%"></div></div></div>
+<div class="bar" id="hullRow" style="display:none"><div class="lbl"><span>🛸 Корпус корабля</span><span id="huT">0 / 0</span></div><div class="track"><div class="fill" id="huF" style="width:100%"></div></div></div>
+<div id="credits">💰 Кредиты: <b id="crT">0</b></div>
+<div id="equip">⚙ <span id="eqT">Разрушитель / Скафандр</span></div>
+</div>
+<div class="hud" id="abilities">
+<div class="ab" id="abQ"><span class="ico">⚡</span>Q<span class="cost">30 Ки</span><div class="cd"></div></div>
+<div class="ab" id="abX"><span class="ico">🛡</span>X<span class="cost">20 Ки</span><div class="cd"></div></div>
+<div class="ab" id="abR"><span class="ico">💨</span>R<span class="cost">15 Ки</span><div class="cd"></div></div>
+<div class="ab" id="abV"><span class="ico">💥</span>Z<span class="cost">80 Ки</span><div class="cd"></div></div>
+<div class="ab" id="abT"><span class="ico">🌟</span>T<span class="cost">25 Ки</span><div class="cd"></div></div>
+</div>
+<div class="hud" id="weapons">
+<div class="wp" id="w1"><div class="n">🔫</div>1 Бластер</div>
+<div class="wp" id="w2"><div class="n">⚔</div>2 Меч</div>
+<div class="wp" id="w3"><div class="n">🔫🔫</div>3 Парные</div>
+<div class="wp" id="w4"><div class="n">🏹</div>4 Лук</div>
+<div class="wp" id="w5"><div class="n">🔨</div>5 Молот</div>
+<div class="wp" id="w6"><div class="n">⚛</div>6 Пушка</div>
+<div class="wp legend on" id="w7"><div class="n">🌟</div>7 Разрушитель</div>
+</div>
+<div class="hud panel" id="planetInfo"><b>🪐 Планета</b><br>Биом: <span id="biomeT">—</span></div>
+<div class="hud" id="btnRow">
+<button class="actBtn" id="camBtn" onclick="toggleCam()">🎥 ВИД: 3-е лицо [V]</button>
+<button class="actBtn" id="visorBtn" onclick="toggleVisor()">🕶 ВИЗОР [G]</button>
+<button class="actBtn" id="launchBtn" onclick="launchFromPlanet()">🚀 ВЗЛЁТ [B]</button>
+</div>
+<div class="hud panel" id="mission">🎯 АКТ I • — м</div>
+<div class="hud panel" id="pbar"><div class="pbName"><span>🎯 <b id="pbN">ЦЕЛЬ</b></span><span id="pbT">0/0</span></div><div class="pbTrack"><div class="pbFill" id="pbF" style="width:100%"></div></div></div>
+<div class="hud panel" id="warTimer">⚔ ВОЙНА: <span id="warT">60</span></div>
+<div class="hud panel" id="beaconPanel">
+<div id="beaconInfo">📍 МАЯК ГРУЗА</div>
+<div id="beaconBtns">
+<button class="actBtn" id="beaconHideBtn" style="padding:5px 12px;font-size:11px" onclick="toggleBeacon()">🙈 Скрыть маяк</button>
+<button class="actBtn" style="padding:5px 12px;font-size:11px;border-color:#ff5566;color:#ff9aa5" onclick="abandonGrave()">❌ Закрыть</button>
+</div>
+</div>
+<canvas class="hud panel" id="radarBox" width="148" height="148"></canvas>
+<div class="hud panel" id="perf">FPS — • —</div>
+<div class="hud" id="toasts"></div>
+<div class="hud" id="cross"></div>
+<div class="hud panel" id="prompt"></div>
+<div class="hud panel" id="banner"></div>
+<div class="hud panel" id="tut">Шаг <b id="tutN">1</b> из 5 — <span id="tutT">Движение: WASD</span></div>
+<div class="hud" id="dmg"></div><div class="hud" id="lowhp"></div><div class="hud" id="storm"></div><div class="hud" id="visorOv"></div>
+<div class="hud" id="vignetteOv"></div><div class="hud" id="scanlineOv"></div>
+<div class="hud" id="whiteOv"></div><div class="hud" id="plasma"></div><div class="hud" id="fade"></div>
+<div class="screen" id="cutS"><canvas id="cutCv"></canvas><div class="cutBar" style="top:0"></div><div class="cutBar" style="bottom:0"></div>
+<div id="cutTitle"><h1>ЗВЁЗДНЫЙ СТРАННИК</h1><h2>ПРОЛОГ • БУНТ НА «АВРОРЕ»</h2></div>
+<div id="cutLines"></div>
+<div id="cutMission"><div class="m1">ЦЕЛЬ: ВЫЖИТЬ И ДОБРАТЬСЯ ДО РОДНОЙ ПЛАНЕТЫ</div><div class="m2">ГЕЛИОС-ПРАЙМ — СЕКТОР [4, -3]</div></div>
+<button class="actBtn" id="skipBtn" onclick="endCut()">ПРОПУСТИТЬ ⏭</button></div>
+<div class="screen" id="menuS">
+<h1>ЗВЁЗДНЫЙ СТРАННИК</h1><h2>КОСМИЧЕСКАЯ САГА • ЭХО ТИШИНЫ</h2>
+<div class="ctrls">
+<span><b>WASD</b> Движение</span><span><b>МЫШЬ</b> Обзор</span>
+<span><b>ЛКМ</b> Стрельба</span><span><b>V</b> Вид 1-е / 3-е лицо</span>
+<span><b>SPACE</b> Джетпак</span><span><b>B</b> Взлёт</span>
+<span><b>G</b> Визор</span><span><b>F</b> Взаимодействие</span>
+<span><b>I</b> Инвентарь / Крафт</span><span><b>1-7</b> Оружие</span>
+<span><b>Q X R Z T</b> Способности</span><span><b>F9</b> Качество графики</span></div>
+<div class="qcs"><div class="qc" id="qc0" onclick="setQuality(0)">НИЗК.</div><div class="qc on" id="qc1" onclick="setQuality(1)">СРЕДН.</div><div class="qc" id="qc2" onclick="setQuality(2)">ВЫСОК.</div></div>
+<div class="btn" onclick="startCut()">▶ НАЧАТЬ ПУТЕШЕСТВИЕ</div>
+<div class="btnSm" onclick="skipStory()">⏭ ПРОПУСТИТЬ ПРОЛОГ</div>
+<div class="btnSm" onclick="newGame()">🗑 НОВАЯ ИГРА</div></div>
+<div class="screen" id="deathS" style="display:none"><h1>💀 ПОГИБ</h1><h2 id="deathSub" style="max-width:560px;text-align:center;line-height:1.6">…</h2><div class="btn" onclick="respawn()">🔄 ВОЗРОДИТЬСЯ У СТАРТА</div></div>
+<div class="screen" id="pauseS" style="display:none"><h1 style="font-size:40px">⏸ ПАУЗА</h1><h2>НАЖМИТЕ ESC</h2></div>
+<div class="screen" id="winS" style="display:none"><h1>🌍 РОДИНА</h1><h2>ГЕЛИОС-ПРАЙМ</h2>
+<p style="max-width:660px;text-align:center;line-height:1.7;color:#cfe4d8;margin-bottom:24px">Капитан Лерой вернулся. Но дом под осадой, а правда о бунте скрыта во тьме.</p>
+<div id="winStats" style="font-family:Consolas,monospace;color:#8fd8ff;margin-bottom:28px;line-height:1.8"></div>
+<div class="btn" onclick="closeWin()">АКТ II: ДОМ В ТЕНИ</div></div>
+<div class="screen" id="invS"><div id="invBox">
+<div class="uiHead"><div><h3>◈ <span>ТРЮМ</span> КАПИТАНА ◈</h3><div class="sub">ДЖЕКСОН ЛЕРОЙ • ЭКИПИРОВКА И ВЕРФЬ</div></div>
+<div style="text-align:right"><div class="invCr">💰 <span id="invCr">0</span></div><div class="gbtn" style="margin-top:8px" onclick="toggleInv()">ЗАКРЫТЬ [I]</div></div></div>
+<div class="invCols"><div class="invLeft">
+<div class="secTitle">Экипировка</div><div id="invEquip"></div>
+<div class="secTitle">Боевые системы</div><div id="invStats"></div>
+<div class="secTitle">Голо-сканер</div><div id="invDetail"></div></div>
+<div class="invRight"><div class="secTitle">Трюмный отсек</div><div id="invGrid"></div>
+<div class="secTitle">⚙ Верфь — крафт</div><div id="recipes"></div>
+<div class="secTitle">📖 Кодекс странника</div><div id="codexList"></div></div></div>
+</div></div>
+<div class="screen" id="stationS"><div id="stBox">
+<div class="uiHead"><div><h3>🛰 <span id="stName">СТАНЦИЯ</span></h3><div class="sub">РЕМОНТ • ВЕРФЬ • АНГАР</div></div>
+<div style="text-align:right"><div class="invCr">💰 <span id="stCredits">0</span></div><div class="gbtn" style="margin-top:8px" onclick="closeStation()">ПОКИНУТЬ [ESC]</div></div></div>
+<div class="stCols">
+<div class="stCol"><div class="secTitle">🔧 Ремонтный док</div><div id="stRepair"></div>
+<div class="secTitle">🛸 Ангар — ваши корабли</div><div id="stHangar"></div></div>
+<div class="stCol"><div class="secTitle">⚓ Верфь — покупка</div><div id="stYard"></div></div>
+</div>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script>
+/* ====================================================
+   ЗВЁЗДНЫЙ СТРАННИК v7.6
+   ✅ Смена вида ТОЛЬКО на V (никакие другие клавиши)
+   ✅ Фикс зависания у звезды+ЧД (клампы скорости, NaN-guard)
+   ✅ Фикс дублирования взрывов (флаг dead)
+==================================================== */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rand=(a,b)=>a+Math.random()*(b-a);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function coordHash(x,z){let h=Math.imul(x,374761393)+Math.imul(z,668265263);h=Math.imul(h^h>>>13,1274126177);return(h^h>>>16)>>>0;}
+function hash2(x,z,s){let n=Math.sin(x*127.1+z*311.7+s*74.7)*43758.5453;return n-Math.floor(n);}
+function vnoise(x,z,s){const xi=Math.floor(x),zi=Math.floor(z),xf=x-xi,zf=z-zi,u=xf*xf*(3-2*xf),v=zf*zf*(3-2*zf),a=hash2(xi,zi,s),b=hash2(xi+1,zi,s),c=hash2(xi,zi+1,s),d=hash2(xi+1,zi+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
+function fbm(x,z,s){let f=0,a=.5,q=.014;for(let i=0;i<4;i++){f+=a*vnoise(x*q,z*q,s+i*13.7);a*=.5;q*=2.1;}return f;}
+const BIOMES={
+grass:{name:'🌿 Зелёные равнины',sky:0x5f93b8,fog:0x6d94ad,sun:0xf0dcae,low:0x1e4629,mid:0x3a7439,high:0x8aa860,water:0x164a7a,part:0xcde8a8,grav:20,bld:'ruins'},
+desert:{name:'🏜 Пустынные дюны',sky:0xb0824e,fog:0xa8835c,sun:0xeec085,low:0x6e4823,mid:0x93693c,high:0xbfa26e,water:null,part:0xe8cf9d,grav:18,bld:'antenna'},
+ice:{name:'❄ Ледяные пустоши',sky:0x6f8ba6,fog:0x829cb2,sun:0xc4dbee,low:0x38505f,mid:0x617e96,high:0xa9bccb,water:0x123a5e,part:0xe8f4ff,grav:17,bld:'dome'},
+volcanic:{name:'🌋 Вулканический ад',sky:0x240c08,fog:0x38140f,sun:0xff7440,low:0x120b09,mid:0x311c16,high:0x5c3222,water:0xd93208,part:0xff7830,grav:24,bld:'spire'},
+alien:{name:'👽 Чужая биосфера',sky:0x3e3059,fog:0x4e3d72,sun:0xb598e6,low:0x1a3230,mid:0x443062,high:0x8a68ae,water:0x0f9a82,part:0x78f0c0,grav:14,bld:'monolith'}};
+const BIOME_KEYS=Object.keys(BIOMES);
+const HOME_SECT={x:4,z:-3},SUNHEN_SECT={x:-3,z:2};
+const HOME_STAR_POS=new THREE.Vector3((HOME_SECT.x+.5)*1600,60,(HOME_SECT.z+.5)*1600);
+const SUNHEN_STAR_POS=new THREE.Vector3((SUNHEN_SECT.x+.5)*1600,40,(SUNHEN_SECT.z+.5)*1600);
+const HOME_ORB={r:300,sp:.012,ph:1.2,incl:.05,pr:70},SUNHEN_ORB={r:340,sp:.01,ph:2.4,incl:.08,pr:95};
+const homeTmp=new THREE.Vector3(),sunhenTmp=new THREE.Vector3();
+function homePos(o,t){const a=HOME_ORB.ph+HOME_ORB.sp*t;o.set(HOME_STAR_POS.x+Math.cos(a)*HOME_ORB.r,HOME_STAR_POS.y+Math.sin(a)*HOME_ORB.r*HOME_ORB.incl,HOME_STAR_POS.z+Math.sin(a)*HOME_ORB.r);return o;}
+function sunhenPos(o,t){const a=SUNHEN_ORB.ph+SUNHEN_ORB.sp*t;o.set(SUNHEN_STAR_POS.x+Math.cos(a)*SUNHEN_ORB.r,SUNHEN_STAR_POS.y+Math.sin(a)*SUNHEN_ORB.r*SUNHEN_ORB.incl,SUNHEN_STAR_POS.z+Math.sin(a)*SUNHEN_ORB.r);return o;}
+const QUAL=[{n:'НИЗК.',pixel:.75,bloom:false,view:1,part:120,bld:6},{n:'СРЕДН.',pixel:1,bloom:true,view:2,part:220,bld:10},{n:'ВЫСОК.',pixel:Math.min(devicePixelRatio,1.5),bloom:true,view:3,part:350,bld:14}];
+let QI=1,VIEW=2,curPixel=1,fps=60,fpsAcc=0,frames=0,adaptT=0;
+const matCache={};
+function eMat(c,e,i){const k=c+'_'+e+'_'+i;if(matCache[k])return matCache[k];return matCache[k]=new THREE.MeshStandardMaterial({color:c,emissive:e,emissiveIntensity:i,roughness:.6,metalness:.3});}
+function bMat(c){const k='b'+c;if(matCache[k])return matCache[k];return matCache[k]=new THREE.MeshBasicMaterial({color:c});}
+const geoCache={};
+function sGeo(sz){const k='s'+sz;if(geoCache[k])return geoCache[k];return geoCache[k]=new THREE.SphereGeometry(sz,8,8);}
+const G={crystal:new THREE.ConeGeometry(.5,1.6,5),met:new THREE.DodecahedronGeometry(1,0)};
+const exclTex=(function(){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.font='bold 52px Segoe UI';g.textAlign='center';g.textBaseline='middle';g.shadowColor='#ff2244';g.shadowBlur=12;g.fillStyle='#ff4757';g.fillText('!',32,34);return new THREE.CanvasTexture(c);})();
+const glowTex=(function(){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const gr=g.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(255,220,150,.5)');gr.addColorStop(1,'rgba(255,150,60,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);})();
+const PSHIPS=[
+{id:'iskra',n:'Челнок «Искра»',i:'🛸',tier:1,speed:1.3,boost:1.2,hull:60,price:300,parts:{plating:2,engineP:1}},
+{id:'strizh',n:'Разведчик «Стриж»',i:'🛸',tier:1,speed:1.5,boost:1.3,hull:90,price:800,parts:{plating:3,engineP:1}},
+{id:'sokol',n:'Истребитель «Сокол»',i:'✈',tier:2,speed:1.7,boost:1.4,hull:130,price:1500,parts:{plating:3,engineP:2}},
+{id:'groza',n:'Корвет «Гроза»',i:'🚀',tier:2,speed:1.8,boost:1.4,hull:180,price:2600,parts:{plating:4,engineP:2,navmod:1}},
+{id:'burevestnik',n:'Фрегат «Буревестник»',i:'🚀',tier:3,speed:1.9,boost:1.5,hull:260,price:4200,parts:{plating:5,engineP:2,reactor:1}},
+{id:'klinok',n:'Эсминец «Клинок»',i:'🚀',tier:3,speed:2.0,boost:1.5,hull:360,price:6500,parts:{plating:6,engineP:3,reactor:1,navmod:1}},
+{id:'avrora2',n:'Крейсер «Аврора-II»',i:'🛳',tier:4,speed:2.1,boost:1.6,hull:520,price:9500,parts:{plating:8,engineP:3,reactor:2,navmod:1}},
+{id:'uley',n:'Носитель «Улей-М»',i:'🛳',tier:4,speed:2.0,boost:1.5,hull:720,price:13000,parts:{plating:10,engineP:4,reactor:2,navmod:2}},
+{id:'vlastelin',n:'Линкор «Властелин»',i:'🛳',tier:5,speed:2.2,boost:1.6,hull:950,price:19000,parts:{plating:12,engineP:5,reactor:3,navmod:2}},
+{id:'titan',n:'Дредноут «Титан»',i:'🛳',tier:5,speed:2.3,boost:1.7,hull:1400,price:32000,parts:{plating:16,engineP:6,reactor:4,navmod:3}},
+{id:'strannik',n:'«СТРАННИК» [УТ]',i:'🌟',tier:6,speed:3.0,boost:2.0,hull:2000,price:0,leg:true,parts:{ltcore:1,nanohull:1,qengine:1}},
+{id:'feniks',n:'«ФЕНИКС» [УТ]',i:'🌟',tier:6,speed:3.5,boost:2.2,hull:3200,price:0,leg:true,parts:{ltcore:2,nanohull:1,qengine:1}},
+{id:'leviathan',n:'«ЛЕВИАФАН» [УТ]',i:'🌟',tier:6,speed:4.0,boost:2.5,hull:5000,price:0,leg:true,parts:{ltcore:3,nanohull:2,qengine:2}}];
+function pshipById(id){return PSHIPS.find(function(s){return s.id===id;});}
+let ownedShips={},hulls={},activeShip=null,lastRenderedShip=null,playerShipGrp=null;
+function grantShip(id,pct){const d=pshipById(id);if(!d)return;ownedShips[id]=true;hulls[id]=Math.round(d.hull*(pct===undefined?1:pct));activeShip=id;lastRenderedShip=null;}
+const ITEMS={
+crystal:{n:'Ки-кристалл',i:'💎',r:1,t:'res',v:5,d:'Конденсированная Ки-энергия.'},
+scrap:{n:'Металлолом',i:'🔩',r:0,t:'res',v:3,d:'Обломки обшивки Сюнхэн.'},
+bio:{n:'Био-образец',i:'🧬',r:1,t:'res',v:6,d:'Ткань ползуна.'},
+core:{n:'Плазменное ядро',i:'🔮',r:2,t:'res',v:15,d:'Ядро тяжёлого корабля.'},
+sunshard:{n:'Осколок Брони Солнца',i:'🌞',r:3,t:'res',v:500,d:'Фрагмент коры звезды.'},
+plating:{n:'Корпусная обшивка',i:'🔲',r:0,t:'res',v:8,d:'Прочный лист.'},
+engineP:{n:'Маршевый двигатель',i:'⚙',r:1,t:'res',v:20,d:'Двигатель.'},
+reactor:{n:'Термоядерный реактор',i:'☢',r:2,t:'res',v:60,d:'Реактор.'},
+navmod:{n:'Навигационный модуль',i:'🧭',r:2,t:'res',v:50,d:'Навигация.'},
+ltcore:{n:'Ядро УТ',i:'🔷',r:3,t:'res',v:500,d:'Легендарный компонент.'},
+nanohull:{n:'Нанообшивка',i:'🧿',r:3,t:'res',v:500,d:'Самовосстанавливающийся корпус.'},
+qengine:{n:'Квантовый двигатель',i:'🌀',r:3,t:'res',v:600,d:'Двигатель УТ.'},
+medkit:{n:'Аптечка',i:'❤',r:0,t:'use',d:'+50 здоровья.'},
+bigmed:{n:'Полевая хирургия',i:'💖',r:1,t:'use',d:'Полное здоровье.'},
+kicell:{n:'Ки-ядро',i:'⚡',r:1,t:'use',d:'+60 Ки.'},
+shieldmod:{n:'Щит-модуль',i:'🛡',r:2,t:'use',d:'Щит на 6 секунд.'},
+jetfix:{n:'Ремкомплект джетпака',i:'🚀',r:0,t:'use',d:'Полная заправка.'}};
+const ITEM_IDS=['crystal','scrap','bio','core','sunshard','plating','engineP','reactor','navmod','ltcore','nanohull','qengine','medkit','bigmed','kicell','shieldmod','jetfix'];
+const RAR=['#9fb0c0','#35a0ff','#b060ff','#ffd25e'],RAR_N=['ОБЫЧНЫЙ','РЕДКИЙ','ЭПИЧЕСКИЙ','ЛЕГЕНДАРНЫЙ'];
+const COSTS={medkit:{crystal:3},bigmed:{crystal:5,bio:1},kicell:{crystal:2},jetfix:{scrap:3},shieldmod:{crystal:4,scrap:2},armor:{crystal:5,scrap:3},dmgMod:{crystal:6,core:1},speed:{crystal:4,bio:2},magnet:{crystal:3,scrap:1},regen:{crystal:4,core:1},sunsuit:{sunshard:1}};
+const RECIPES=[
+{id:'medkit',n:'Аптечка',i:'❤'},{id:'bigmed',n:'Полевая хирургия',i:'💖'},{id:'kicell',n:'Ки-ядро',i:'⚡'},{id:'jetfix',n:'Ремкомплект',i:'🚀'},{id:'shieldmod',n:'Щит-модуль',i:'🛡'},
+{id:'armor',n:'Броня (+20 HP)',i:'🦺',max:4},{id:'dmgMod',n:'Урон (+15%)',i:'⚔',max:3},{id:'speed',n:'Сервоприводы',i:'🦿',max:3},{id:'magnet',n:'Магнит',i:'🧲',max:2},{id:'regen',n:'Ки-регенератор',i:'♻',max:2},
+{id:'sunsuit',n:'🌞 БРОНЯ СОЛНЦА',i:'🌞',max:1}];
+PSHIPS.forEach(function(s){COSTS['ship_'+s.id]=s.parts;RECIPES.push({id:'ship_'+s.id,n:s.n,i:s.i,ship:1,leg:s.leg});});
+let inv={crystal:0,scrap:0,bio:0,core:0,sunshard:0,plating:0,engineP:0,reactor:0,navmod:0,ltcore:0,nanohull:0,qengine:0,medkit:0,bigmed:0,kicell:0,shieldmod:0,jetfix:0,armor:0,dmgMod:0,mods:{speed:0,magnet:0,regen:0},sunsuit:false};
+let selItem=null;
+function snapshotItems(){const o={};ITEM_IDS.forEach(function(id){o[id]=inv[id];});return o;}
+function clearItems(){ITEM_IDS.forEach(function(id){inv[id]=0;});}
+function restoreItems(o){ITEM_IDS.forEach(function(id){inv[id]=o[id]||0;});}
+function invAdd(id,n){inv[id]+=n;toast(ITEMS[id].i+' +'+n+' '+ITEMS[id].n,RAR[ITEMS[id].r]);}
+function modLvl(id){return id==='armor'?inv.armor:id==='dmgMod'?inv.dmgMod:id==='sunsuit'?(inv.sunsuit?1:0):inv.mods[id];}
+function dropLegendaryPart(){const r=Math.random();const id=r<.34?'ltcore':(r<.67?'nanohull':'qengine');invAdd(id,1);showBanner('🔷 ЛЕГЕНДАРНАЯ ДЕТАЛЬ: '+ITEMS[id].n,'#ffd25e');addCodex('losttech');}
+function craft(id){
+if(id.indexOf('ship_')===0){const sid=id.slice(5);const d=pshipById(sid);
+if(ownedShips[sid])return;const cost=d.parts;for(const k in cost)if(inv[k]<cost[k])return;
+for(const k in cost)inv[k]-=cost[k];grantShip(sid,1);
+showBanner('🛸 КОРАБЛЬ СОЗДАН: '+d.n,'#7fff9a');sfx('pickup');updateInvUI();return;}
+const cost=COSTS[id];for(const k in cost)if(inv[k]<cost[k])return;
+if(id==='sunsuit'&&inv.sunsuit)return;
+for(const k in cost)inv[k]-=cost[k];
+if(id==='sunsuit'){inv.sunsuit=true;P.maxHp+=150;P.hp+=150;showBanner('🌞 БРОНЯ СОЛНЦА СОЗДАНА','#ffd25e');}
+else if(ITEMS[id])invAdd(id,1);
+else if(id==='armor'){inv.armor++;P.maxHp+=20;P.hp+=20;}
+else if(id==='dmgMod')inv.dmgMod++;
+else inv.mods[id]++;
+sfx('pickup');updateInvUI();}
+function useItem(id){if(inv[id]<=0)return;
+if(id==='medkit')P.hp=Math.min(P.maxHp,P.hp+50);
+else if(id==='bigmed')P.hp=P.maxHp;
+else if(id==='kicell')P.ki=Math.min(P.maxKi,P.ki+60);
+else if(id==='shieldmod')P.shield=6;
+else if(id==='jetfix')P.jet=100;
+inv[id]--;sfx('pickup');updateInvUI();}
+function sellItem(id,all){const n=all?inv[id]:1;if(n<=0)return;inv[id]-=n;P.credits+=ITEMS[id].v*n;sfx('ui');updateInvUI();}
+function selInv(id){selItem=(selItem===id)?null:id;updateInvUI();}
+function toast(txt,col){const b=$('toasts');if(b.children.length>4)b.removeChild(b.firstChild);
+const d=document.createElement('div');d.className='toast';d.textContent=txt;if(col)d.style.borderLeftColor=col;b.appendChild(d);
+setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},2900);}
+function statBar(l,v,m,t){return '<div class="stRow"><div class="sl"><span>'+l+'</span><b>'+t+'</b></div><div class="stTrack"><div class="stFill" style="width:'+clamp(v/m*100,0,100)+'%"></div></div></div>';}
+function hexSlot(icon,lvl,gold,label){return '<div class="eqWrap"><div class="eqHex'+(gold?' gold':'')+'"><div class="ei">'+icon+'</div><div class="lv">'+lvl+'</div></div><div class="eqLabel">'+label+'</div></div>';}
+function updateInvUI(){
+$('invCr').textContent=P.credits;
+const wIco=['🔫','⚔','🔫','🏹','🔨','⚛','🌟'][P.weapon];
+$('invEquip').innerHTML=
+hexSlot(wIco,'—',P.weapon===6,'ОРУЖИЕ')+
+hexSlot('🦺',inv.armor,inv.armor>=3,'БРОНЯ')+
+hexSlot('🛸',activeShip?'✔':'—',!!activeShip,'КОРАБЛЬ')+
+hexSlot('🧲',inv.mods.magnet,false,'МАГНИТ')+
+hexSlot('🌞',inv.sunsuit?'✔':'—',inv.sunsuit,'СОЛНЦЕ');
+const mult=(1+inv.dmgMod*.15);
+const shipSpd=activeShip?pshipById(activeShip).speed:1;
+$('invStats').innerHTML=
+statBar('❤ Прочность',P.hp,P.maxHp,Math.ceil(P.hp)+'/'+P.maxHp)+
+statBar('⚔ Урон',mult,3,'×'+mult.toFixed(2))+
+statBar('🚀 Скорость',(1+inv.mods.speed*.08)*shipSpd,4,'×'+((1+inv.mods.speed*.08)*shipSpd).toFixed(2))+
+statBar('♻ Ки-реген',4+inv.mods.regen*3,10,(4+inv.mods.regen*3)+'/с')+
+statBar('🧲 Радиус сбора',7+inv.mods.magnet*4,15,(7+inv.mods.magnet*4)+' м');
+let gh='';
+ITEM_IDS.forEach(function(id){if(inv[id]>0){const it=ITEMS[id];
+gh+='<div class="slot r'+it.r+(selItem===id?' sel':'')+'" title="'+it.n+'" onclick="selInv(\''+id+'\')"><div class="rbar" style="background:'+RAR[it.r]+'"></div><div class="ic">'+it.i+'</div><div class="cnt">'+inv[id]+'</div></div>';}});
+const used=ITEM_IDS.filter(function(id){return inv[id]>0;}).length;
+for(let i=0;i<Math.max(0,20-used);i++)gh+='<div class="slot empty"><div class="ic">·</div></div>';
+$('invGrid').innerHTML=gh;
+const dEl=$('invDetail');
+if(!selItem||inv[selItem]<=0)dEl.innerHTML='<div class="holo"><div class="hIcon">📡</div></div><div class="dBody"><div class="sub">Выберите предмет для сканирования…</div></div>';
+else{const it=ITEMS[selItem];let acts='';
+if(it.t==='use')acts+='<button class="gbtn" onclick="useItem(\''+selItem+'\')">Применить</button>';
+acts+='<button class="gbtn gold" onclick="sellItem(\''+selItem+'\',false)">Продать 1 (+'+it.v+')</button>';
+if(inv[selItem]>1)acts+='<button class="gbtn gold" onclick="sellItem(\''+selItem+'\',true)">Продать всё</button>';
+dEl.innerHTML='<div class="holo"><div class="hIcon">'+it.i+'</div></div><div class="dBody">'+
+'<div class="nm" style="color:'+RAR[it.r]+'">'+it.n+'</div>'+
+'<div class="rar" style="color:'+RAR[it.r]+'">◈ '+RAR_N[it.r]+' • ЗАПАС '+inv[selItem]+'</div>'+
+'<div class="ds">'+it.d+'</div><div class="acts">'+acts+'</div></div>';}
+let rh='';
+RECIPES.forEach(function(rc){const cost=COSTS[rc.id];let mats='',okAll=true;
+for(const k in cost){const ok=inv[k]>=cost[k];if(!ok)okAll=false;mats+='<span class="'+(ok?'ok':'no')+'">'+ITEMS[k].i+inv[k]+'/'+cost[k]+' </span>';}
+let maxed=false,lvl='';
+if(rc.ship){const sid=rc.id.slice(5);maxed=!!ownedShips[sid];lvl=maxed?' [В АНГАРЕ]':'';}
+else if(rc.max!==undefined){const cur=modLvl(rc.id);maxed=cur>=rc.max;lvl=' ['+cur+'/'+rc.max+']';}
+rh+='<div class="cCard'+(rc.leg?' leg':'')+'"><div class="cn">'+rc.i+' '+rc.n+'<small style="color:#7fa2bd">'+lvl+'</small></div><div class="mats">'+mats+'</div><button class="gbtn'+(rc.leg?' gold':'')+'" '+(okAll&&!maxed?'':'disabled')+' onclick="craft(\''+rc.id+'\')">'+(maxed?'Готово':'Создать')+'</button></div>';});
+$('recipes').innerHTML=rh;
+let ch='';
+codex.forEach(function(id){const c=CODEX_DEFS[id];if(c)ch+='<div class="codexItem"><b>'+c.t+'</b><p>'+c.txt+'</p></div>';});
+$('codexList').innerHTML=ch||'<div class="sub">Кодекс пуст. Исследуйте вселенную…</div>';}
+const CODEX_DEFS={
+start:{t:'Изгнание',txt:'Капитан Лерой выброшен в космос после бунта на «Авроре».'},
+helios:{t:'АКТ I: Долгий путь домой',txt:'Гелиос-Прайм достигнут.'},
+sunhen:{t:'Враг у ворот',txt:'Прайм-Улей Сюнхэн в секторе [-3,2].'},
+blackhole:{t:'Горизонт',txt:'Чёрные дыры смотрят в ответ.'},
+losttech:{t:'Утерянные технологии',txt:'Обломки древней цивилизации.'},
+nemesis:{t:'Палач Морроу',txt:'Именной охотник Сюнхэн.'},
+star:{t:'Смерть звезды',txt:'Даже звёзды можно погасить.'}};
+let codex=[];
+function addCodex(id){if(codex.indexOf(id)>=0)return;codex.push(id);const c=CODEX_DEFS[id];if(c)toast('📖 Кодекс: '+c.t,'#b060ff');}
+let storyAct=1;
+const SAVE_KEY='star_wanderer_v7';
+function saveGame(){try{
+const data={inv:inv,credits:P.credits,owned:ownedShips,hulls:hulls,maxHp:P.maxHp,storyAct:storyAct,winShown:winShown,notoriety:notoriety,codex:codex};
+localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+}catch(e){}}
+function loadGame(){try{
+const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;
+const d=JSON.parse(raw);
+if(d.inv)for(const k in d.inv)if(inv.hasOwnProperty(k))inv[k]=d.inv[k];
+P.credits=d.credits||0;
+ownedShips=d.owned||{};hulls=d.hulls||{};
+P.maxHp=d.maxHp||100;P.hp=P.maxHp;
+storyAct=d.storyAct||1;winShown=!!d.winShown;
+notoriety=d.notoriety||0;
+if(d.codex)d.codex.forEach(function(id){if(codex.indexOf(id)<0)codex.push(id);});
+return true;
+}catch(e){return false;}}
+function newGame(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}location.reload();}
+/* ===== АУДИО (объявлено РАНЬШЕ startAmbient) ===== */
+let AC=null;const sfxLast={};
+let ambStarted=false;
+function sfx(t){try{const now=performance.now();if(sfxLast[t]&&now-sfxLast[t]<45)return;sfxLast[t]=now;
+if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);
+const at=AC.currentTime;g.gain.setValueAtTime(.11,at);
+const d={shoot:[880,220,.09,'square'],hit:[300,90,.15,'sawtooth'],boom:[160,40,.5,'sine'],pickup:[660,1320,.18,'sine'],ui:[500,700,.06,'triangle'],dash:[200,600,.15,'sine'],zap:[1400,200,.25,'sawtooth']}[t]||[440,440,.1,'sine'];
+o.type=d[3];o.frequency.setValueAtTime(d[0],at);o.frequency.exponentialRampToValueAtTime(d[1],at+d[2]);
+g.gain.exponentialRampToValueAtTime(.001,at+d[2]);o.start(at);o.stop(at+d[2]);}catch(e){}}
+function startAmbient(){if(ambStarted)return;ambStarted=true;try{
+if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+[55,110.4,164.6].forEach(function(f){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;o.type='sine';g.gain.value=.016;o.connect(g);g.connect(AC.destination);o.start();
+const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=rand(.05,.12);lg.gain.value=.007;l.connect(lg);lg.connect(g.gain);l.start();});}catch(e){}}
+/* ===== РЕНДЕРЕР (объявлен ДО vm, setQuality) ===== */
+const renderer=new THREE.WebGLRenderer({canvas:$('cv'),antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(QUAL[1].pixel);renderer.setSize(innerWidth,innerHeight);
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,12000);
+const space=new THREE.Scene();
+const surf=new THREE.Scene();
+const composer=new THREE.EffectComposer(renderer);
+composer.addPass(new THREE.RenderPass(space,camera));
+const bloomPass=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.85,.5,.85);
+composer.addPass(bloomPass);
+let baseBloom=.85,bloomBoost=0,chromBoost=0;
+function setQuality(i){QI=i;const q=QUAL[i];VIEW=q.view;curPixel=q.pixel;renderer.setPixelRatio(curPixel);composer.setPixelRatio(curPixel);renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);bloomPass.enabled=q.bloom;baseBloom=q.bloom?.85:0;for(let k=0;k<3;k++)$('qc'+k).classList.toggle('on',k===i);}
+/* ===== vm ПОСЛЕ camera ===== */
+const vm=new THREE.Group();camera.add(vm);
+const vmCell=new THREE.Mesh(new THREE.BoxGeometry(.07,.1,.16),bMat(0x35e0ff));vmCell.position.set(.09,0,-.1);vm.add(vmCell);
+(function(){
+const bodyM=eMat(0x2c3644,0x000000,0);
+const body=new THREE.Mesh(new THREE.BoxGeometry(.14,.18,.6),bodyM);vm.add(body);
+const rail=new THREE.Mesh(new THREE.BoxGeometry(.06,.04,.5),eMat(0x1a222c,0x000000,0));rail.position.y=.11;vm.add(rail);
+const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,.34,10),eMat(0x1a222c,0x000000,0));barrel.rotation.x=Math.PI/2;barrel.position.set(0,.03,-.44);vm.add(barrel);
+const grip=new THREE.Mesh(new THREE.BoxGeometry(.09,.16,.1),bodyM);grip.position.set(0,-.14,.12);grip.rotation.x=.3;vm.add(grip);
+const muzzle=new THREE.Mesh(new THREE.TorusGeometry(.06,.02,6,12),eMat(0x1a222c,0x000000,0));muzzle.position.set(0,.03,-.6);vm.add(muzzle);})();
+const vmTip=new THREE.Mesh(sGeo(.05),bMat(0x35e0ff));vmTip.position.set(0,.03,-.62);vm.add(vmTip);
+const vmFlash=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd25e,blending:THREE.AdditiveBlending,transparent:true,opacity:.9,depthWrite:false}));
+vmFlash.position.set(0,.03,-.7);vmFlash.scale.set(.4,.4,1);vmFlash.visible=false;vm.add(vmFlash);
+vm.position.set(.34,-.32,-.62);vm.visible=false;
+let vmKick=0,bobT=0,vmFlashT=0;
+const JET_POOL=[];
+const jetMat=new THREE.SpriteMaterial({map:glowTex,color:0xff8830,blending:THREE.AdditiveBlending,transparent:true,opacity:.85,depthWrite:false});
+for(let i=0;i<60;i++){
+const m=new THREE.Sprite(jetMat.clone());m.visible=false;m.scale.setScalar(.3);
+space.add(m);JET_POOL.push({m:m,vel:new THREE.Vector3(),life:0,maxLife:0,hot:i%2===0});}
+function spawnJet(pos,vel){
+for(const p of JET_POOL){if(p.life<=0){
+p.m.visible=true;p.m.position.copy(pos);
+p.m.material.color.setHex(p.hot?0xffb050:0xff6020);
+p.vel.copy(vel).multiplyScalar(-.4).add(new THREE.Vector3(rand(-1,1),rand(-1.5,.2),rand(-1,1)).multiplyScalar(rand(1,3)));
+p.maxLife=rand(.3,.7);p.life=p.maxLife;
+p.m.scale.setScalar(rand(.25,.45));return;}}}
+const STAR_DUST_N=180;
+const starDustPos=new Float32Array(STAR_DUST_N*3);
+const starDustCol=new Float32Array(STAR_DUST_N*3);
+for(let i=0;i<STAR_DUST_N;i++){
+starDustPos[i*3]=rand(-40,40);starDustPos[i*3+1]=rand(-40,40);starDustPos[i*3+2]=rand(-40,40);
+const c=new THREE.Color().setHSL(rand(.5,.7),rand(.3,.7),rand(.7,1));
+starDustCol[i*3]=c.r;starDustCol[i*3+1]=c.g;starDustCol[i*3+2]=c.b;}
+const starDustGeo=new THREE.BufferGeometry();
+starDustGeo.setAttribute('position',new THREE.BufferAttribute(starDustPos,3));
+starDustGeo.setAttribute('color',new THREE.BufferAttribute(starDustCol,3));
+const starDust=new THREE.Points(starDustGeo,new THREE.PointsMaterial({size:0.25,vertexColors:true,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true}));
+space.add(starDust);
+const TRAIL_N=30;
+const trailPos=new Float32Array(TRAIL_N*3);
+const trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));
+const trailLine=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({color:0x35e0ff,transparent:true,opacity:.5,blending:THREE.AdditiveBlending}));
+trailLine.frustumCulled=false;
+space.add(trailLine);
+let trailT=0;
+const TRACERS=[];
+function spawnTracer(from,to,col){
+const g=new THREE.BufferGeometry().setFromPoints([from.clone(),to.clone()]);
+const m=new THREE.Line(g,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85,blending:THREE.AdditiveBlending}));
+activeScene.add(m);
+TRACERS.push({m:m,life:.18});}
+function secondaryExplosion(pos){
+setTimeout(function(){
+if(mode==='dead')return;
+const off=new THREE.Vector3(rand(-4,4),rand(-4,4),rand(-4,4));
+const p2=pos.clone().add(off);
+const s=new THREE.Mesh(sGeo(1),new THREE.MeshBasicMaterial({color:0xffaa30,transparent:true,opacity:.9,blending:THREE.AdditiveBlending}));
+s.position.copy(p2);addFx(s,.4,function(k){s.scale.setScalar(1+k*4);s.material.opacity=.9*(1-k);});
+const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff8040,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.95}));
+fl.position.copy(p2);fl.scale.set(8,8,1);addFx(fl,.3,function(k){fl.material.opacity=.95*(1-k);});
+bloomBoost=Math.max(bloomBoost,.5);chromBoost=Math.max(chromBoost,.3);
+},120+Math.random()*180);}
+let stations=[],currentStation=null,stOpen=false;
+function buildStationMesh(){
+const grp=new THREE.Group();
+const hubMat=eMat(0x243644,0x35e0ff,.35);
+const hub=new THREE.Mesh(new THREE.CylinderGeometry(4,5,10,12),hubMat);grp.add(hub);
+const dome=new THREE.Mesh(new THREE.SphereGeometry(4,16,10,0,Math.PI*2,0,Math.PI/2),eMat(0x2a4252,0x8fd8ff,.4));dome.position.y=5;grp.add(dome);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(15,1.6,10,40),eMat(0x1e3040,0x35e0ff,.4));ring.rotation.x=Math.PI/2;grp.add(ring);
+for(let i=0;i<4;i++){const pg=new THREE.Group();
+const spoke=new THREE.Mesh(new THREE.BoxGeometry(8,.4,.4),hubMat);spoke.position.x=8;pg.add(spoke);
+const panel=new THREE.Mesh(new THREE.BoxGeometry(7,.15,4),eMat(0x123048,0x3a7fd5,.6));panel.position.x=13;panel.rotation.x=.3;pg.add(panel);
+pg.rotation.y=i*Math.PI/2;grp.add(pg);}
+const beacons=[];
+for(let i=0;i<3;i++){const bm=new THREE.MeshBasicMaterial({color:i===1?0xffd25e:0x35e0ff,transparent:true,opacity:1});
+const bc=new THREE.Mesh(sGeo(.5),bm);bc.position.set(Math.cos(i*2.1)*5,6+Math.sin(i*2.1)*2,Math.sin(i*2.1)*5);grp.add(bc);beacons.push(bm);}
+const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,6,6),hubMat);antenna.position.y=8;grp.add(antenna);
+return{grp:grp,ring:ring,beacons:beacons};}
+function openStation(st){currentStation=st;stOpen=true;$('stationS').style.display='flex';document.exitPointerLock();renderStation();}
+function closeStation(){stOpen=false;$('stationS').style.display='none';lockPointer();}
+function renderStation(){
+$('stName').textContent=currentStation.name;$('stCredits').textContent=P.credits;
+const sd=activeShip?pshipById(activeShip):null;let rh='';
+if(sd){const cur=Math.round(hulls[activeShip]),max=sd.hull,miss=max-cur,cost=Math.ceil(miss*2);
+rh='<div class="stShip"><div><b>'+sd.i+' '+sd.n+'</b><br><small>КОРПУС '+cur+' / '+max+'</small></div>'+
+(miss>0?'<button class="gbtn" '+(P.credits>=cost?'':'disabled')+' onclick="repairShip()">Починить '+cost+' 💰</button>':'<span class="ok">КОРПУС ЦЕЛ</span>')+'</div>'+
+'<div class="sub">Ремонт: 2 💰 за единицу корпуса.</div>';}
+else rh='<div class="sub">Вы в скафандре — чинить нечего. Купите корабль в верфи.</div>';
+$('stRepair').innerHTML=rh;
+let yh='';
+PSHIPS.forEach(function(s){if(s.leg)return;const owned=ownedShips[s.id];
+yh+='<div class="stShip"><div><b>'+s.i+' '+s.n+'</b><br><small>СКОРОСТЬ ×'+s.speed+' • КОРПУС '+s.hull+'</small></div>'+
+(owned?'<span class="ok">В АНГАРЕ</span>':'<button class="gbtn'+(s.tier>=4?' gold':'')+'" '+(P.credits>=s.price?'':'disabled')+' onclick="buyShip(\''+s.id+'\')">'+s.price+' 💰</button>')+'</div>';});
+$('stYard').innerHTML=yh;
+let hh='<div class="stShip"><div><b>🧍 Скафандр (джетпак)</b></div><button class="gbtn" onclick="selectShip(null)">'+(activeShip?'Выбрать':'Активен')+'</button></div>';
+PSHIPS.forEach(function(s){if(!ownedShips[s.id])return;const isAct=activeShip===s.id;
+hh+='<div class="stShip"><div><b>'+s.i+' '+s.n+'</b><br><small>КОРПУС '+Math.round(hulls[s.id])+'/'+s.hull+'</small></div>'+
+'<button class="gbtn'+(s.leg?' gold':'')+'" '+(isAct?'disabled':'')+' onclick="selectShip(\''+s.id+'\')">'+(isAct?'Активен':'Выбрать')+'</button></div>';});
+$('stHangar').innerHTML=hh;}
+function buyShip(id){const d=pshipById(id);if(!d||ownedShips[id]||P.credits<d.price)return;
+P.credits-=d.price;grantShip(id,1);showBanner('🛸 Куплен корабль: '+d.n,'#7fff9a');renderStation();}
+function repairShip(){if(!activeShip)return;const d=pshipById(activeShip);const miss=d.hull-hulls[activeShip];const cost=Math.ceil(miss*2);
+if(P.credits<cost||miss<=0)return;P.credits-=cost;hulls[activeShip]=d.hull;sfx('pickup');renderStation();}
+function selectShip(id){activeShip=id;lastRenderedShip=null;sfx('ui');renderStation();}
+function buildPlayerShip(d){
+const g=new THREE.Group();const L=6+d.tier*3;
+const hm=eMat(0x0f2231,0x35e0ff,.55);const hm2=eMat(0x0a1822,0x35e0ff,.35);
+const glowCol=d.leg?0xffd25e:0x35e0ff;
+const hull=new THREE.Mesh(new THREE.BoxGeometry(L*.3,L*.14,L),hm);g.add(hull);
+const keel=new THREE.Mesh(new THREE.BoxGeometry(L*.16,L*.1,L*.8),hm2);keel.position.y=-L*.09;g.add(keel);
+const spine=new THREE.Mesh(new THREE.BoxGeometry(L*.1,L*.12,L*.65),hm2);spine.position.y=L*.09;g.add(spine);
+const nose=new THREE.Mesh(new THREE.ConeGeometry(L*.15,L*.38,6),hm);nose.rotation.x=Math.PI/2;nose.position.z=L*.66;g.add(nose);
+const cock=new THREE.Mesh(new THREE.SphereGeometry(L*.09,10,8),eMat(0x06121a,glowCol,1.1));cock.position.set(0,L*.09,L*.3);cock.scale.set(1,.6,1.4);g.add(cock);
+const stripe=new THREE.Mesh(new THREE.BoxGeometry(L*.32,L*.02,L*.5),bMat(glowCol));stripe.position.y=L*.075;g.add(stripe);
+const w1=new THREE.Mesh(new THREE.BoxGeometry(L*.6,L*.04,L*.3),hm);w1.position.set(L*.36,0,-L*.05);w1.rotation.z=-.12;g.add(w1);
+const w2=w1.clone();w2.position.x=-L*.36;w2.rotation.z=.12;g.add(w2);
+const tip1=new THREE.Mesh(sGeo(L*.03),bMat(glowCol));tip1.position.set(L*.62,0,-L*.05);g.add(tip1);
+const tip2=tip1.clone();tip2.position.x=-L*.62;g.add(tip2);
+const eng1=new THREE.Mesh(new THREE.CylinderGeometry(L*.06,L*.08,L*.2,8),hm2);eng1.rotation.x=Math.PI/2;eng1.position.set(L*.09,0,-L*.52);g.add(eng1);
+const eng2=eng1.clone();eng2.position.x=-L*.09;g.add(eng2);
+const gl1=new THREE.Mesh(sGeo(L*.07),bMat(glowCol));gl1.position.set(L*.09,0,-L*.6);g.add(gl1);
+const gl2=gl1.clone();gl2.position.x=-L*.09;g.add(gl2);
+g.userData.engines=[gl1,gl2];
+if(d.tier>=3){const fin=new THREE.Mesh(new THREE.BoxGeometry(L*.05,L*.35,L*.4),hm);fin.position.y=L*.18;fin.position.z=-L*.2;g.add(fin);}
+if(d.leg){const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd25e,blending:THREE.AdditiveBlending,transparent:true,opacity:.55}));halo.scale.set(L*2.2,L*2.2,1);g.add(halo);}
+return g;}
+const suitMat=new THREE.MeshStandardMaterial({color:0xdde6ee,roughness:.45,metalness:.35,emissive:0x000000});
+function buildAstronaut(){
+const g=new THREE.Group();
+const suitDark=eMat(0x8a97a5,0x000000,0);
+const suitAccent=eMat(0x35e0ff,0x35e0ff,.6);
+const darkMat=eMat(0x2c3644,0x000000,0);
+const torso=new THREE.Mesh(new THREE.CylinderGeometry(.28,.36,.6,12),suitMat);torso.position.y=.82;g.add(torso);
+const chest=new THREE.Mesh(new THREE.BoxGeometry(.42,.32,.26),suitMat);chest.position.set(0,.95,.12);g.add(chest);
+const abdomen=new THREE.Mesh(new THREE.CylinderGeometry(.3,.26,.25,12),suitDark);abdomen.position.y=.55;g.add(abdomen);
+const backPlate=new THREE.Mesh(new THREE.BoxGeometry(.36,.4,.06),suitDark);backPlate.position.set(0,.95,-.2);g.add(backPlate);
+const panel=new THREE.Mesh(new THREE.BoxGeometry(.2,.14,.04),darkMat);panel.position.set(0,.98,.26);g.add(panel);
+const chestLight=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.02),suitAccent);chestLight.position.set(0,.98,.285);g.add(chestLight);
+const pl1=new THREE.Mesh(sGeo(.02),bMat(0xff5566));pl1.position.set(-.06,.98,.285);g.add(pl1);
+const pl2=new THREE.Mesh(sGeo(.02),bMat(0x7fff9a));pl2.position.set(.06,.98,.285);g.add(pl2);
+const helmet=new THREE.Mesh(new THREE.SphereGeometry(.3,20,16),suitMat);helmet.position.y=1.42;g.add(helmet);
+const visor=new THREE.Mesh(new THREE.SphereGeometry(.25,20,16),eMat(0x0a1420,0x35e0ff,1.1));visor.position.set(0,1.43,.1);visor.scale.set(1,.85,.7);g.add(visor);
+const rim=new THREE.Mesh(new THREE.TorusGeometry(.24,.035,8,20),suitDark);rim.position.set(0,1.43,.14);g.add(rim);
+const lampL=new THREE.Mesh(sGeo(.04),bMat(0xffd25e));lampL.position.set(-.22,1.55,.12);g.add(lampL);
+const lampR=lampL.clone();lampR.position.x=.22;g.add(lampR);
+const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.28,6),suitDark);antenna.position.set(.2,1.62,-.05);g.add(antenna);
+const antTip=new THREE.Mesh(sGeo(.03),bMat(0xff5566));antTip.position.set(.2,1.77,-.05);g.add(antTip);
+const belt=new THREE.Mesh(new THREE.TorusGeometry(.3,.05,8,16),suitDark);belt.rotation.x=Math.PI/2;belt.position.y=.62;g.add(belt);
+const pouch=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,.08),suitDark);pouch.position.set(.28,.6,.1);g.add(pouch);
+const pouch2=pouch.clone();pouch2.position.x=-.28;g.add(pouch2);
+const pack=new THREE.Mesh(new THREE.BoxGeometry(.46,.55,.24),suitDark);pack.position.set(0,.95,-.28);g.add(pack);
+const tankL=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.4,8),suitMat);tankL.position.set(-.15,.95,-.42);g.add(tankL);
+const tankR=tankL.clone();tankR.position.x=.15;g.add(tankR);
+const packLight=new THREE.Mesh(new THREE.BoxGeometry(.1,.06,.02),suitAccent);packLight.position.set(0,1.1,-.41);g.add(packLight);
+const nozL=new THREE.Mesh(new THREE.CylinderGeometry(.05,.08,.18,8),darkMat);nozL.position.set(-.15,.6,-.4);g.add(nozL);
+const nozR=nozL.clone();nozR.position.x=.15;g.add(nozR);
+const flMat=new THREE.MeshBasicMaterial({color:0xffa030,transparent:true,opacity:.9,blending:THREE.AdditiveBlending});
+const flameL=new THREE.Mesh(new THREE.ConeGeometry(.08,.5,8),flMat);flameL.rotation.x=Math.PI;flameL.position.set(-.15,.35,-.4);g.add(flameL);
+const flameR=flameL.clone();flameR.position.x=.15;g.add(flameR);
+function mkArm(side){
+const sh=new THREE.Group();sh.position.set(side*.4,1.12,0);
+const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),suitMat);sh.add(shoulder);
+const pad=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.16),suitDark);pad.position.y=.06;sh.add(pad);
+const upper=new THREE.Mesh(new THREE.CylinderGeometry(.07,.06,.26,8),suitMat);upper.position.y=-.18;sh.add(upper);
+const elbow=new THREE.Mesh(new THREE.SphereGeometry(.065,8,6),suitDark);elbow.position.y=-.33;sh.add(elbow);
+const fore=new THREE.Mesh(new THREE.CylinderGeometry(.055,.05,.24,8),suitMat);fore.position.y=-.47;sh.add(fore);
+const wrist=new THREE.Mesh(new THREE.TorusGeometry(.05,.015,6,10),suitAccent);wrist.rotation.x=Math.PI/2;wrist.position.y=-.58;sh.add(wrist);
+const glove=new THREE.Mesh(sGeo(.06),suitDark);glove.position.y=-.63;sh.add(glove);
+return sh;}
+const armL=mkArm(1),armR=mkArm(-1);g.add(armL);g.add(armR);
+function mkLeg(side){
+const hip=new THREE.Group();hip.position.set(side*.15,.58,0);
+const thigh=new THREE.Mesh(new THREE.CylinderGeometry(.09,.08,.26,8),suitMat);thigh.position.y=-.15;hip.add(thigh);
+const knee=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),suitDark);knee.position.y=-.3;hip.add(knee);
+const shin=new THREE.Mesh(new THREE.CylinderGeometry(.07,.06,.24,8),suitMat);shin.position.y=-.44;hip.add(shin);
+const boot=new THREE.Mesh(new THREE.BoxGeometry(.12,.09,.2),suitDark);boot.position.set(0,-.58,.04);hip.add(boot);
+const bootTip=new THREE.Mesh(new THREE.BoxGeometry(.1,.05,.08),suitAccent);bootTip.position.set(0,-.6,.12);hip.add(bootTip);
+return hip;}
+const legL=mkLeg(1),legR=mkLeg(-1);g.add(legL);g.add(legR);
+g.userData={armL:armL,armR:armR,legL:legL,legR:legR,flameL:flameL,flameR:flameR,antTip:antTip,chestLight:chestLight,lampL:lampL,lampR:lampR};
+return g;}
+const player=buildAstronaut();
+const aura=new THREE.PointLight(0x35e0ff,0,30);aura.position.y=1;player.add(aura);
+let enemies=[],pBullets=[],eBullets=[],fx=[],crystals=[],pickups=[],meteors=[];
+let activeScene=space;
+const radarC=$('radarBox').getContext('2d');
+const anchorPos=new THREE.Vector3();
+let notoriety=0,nemesisCd=0,directorT=8,chatterT=15,bhSeen=false;
+let warActive=false,warT=0,nextWarT=90,pendingWrecks=false,warMeteorT=0,derelictT=5;
+let grave=null,graveBeacon=null,graveBeaconSurf=null;
+let lastDmgT=-99,saveT=20,crossHitT=0,glitchT=0;
+function buildBeaconMesh(){
+const g=new THREE.Group();
+const base=new THREE.Mesh(new THREE.CylinderGeometry(.6,.9,1.2,8),eMat(0x2a3a4a,0xffb020,.5));
+base.position.y=.6;g.add(base);
+const orb=new THREE.Mesh(sGeo(.5),bMat(0xffb020));orb.position.y=2.4;g.add(orb);
+const beamMat=new THREE.MeshBasicMaterial({color:0xffb020,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
+const beam=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,50,8,1,true),beamMat);
+beam.position.y=25;g.add(beam);
+const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffb020,blending:THREE.AdditiveBlending,transparent:true,opacity:.85,depthWrite:false}));
+glow.scale.set(7,7,1);glow.position.y=2.4;g.add(glow);
+g.userData.orb=orb;g.userData.beam=beamMat;
+return g;}
+function dropGrave(){
+const snap=snapshotItems();const cr=P.credits;
+if(!grave){
+grave={pos:player.position.clone(),mode:mode==='surface'?'surface':'space',
+planetName:mode==='surface'?curPlanet.name:'',credits:cr,inv:snap,beaconVisible:true};
+}else{
+grave.credits+=cr;
+ITEM_IDS.forEach(function(id){grave.inv[id]=(grave.inv[id]||0)+(snap[id]||0);});
+grave.pos=player.position.clone();
+grave.mode=mode==='surface'?'surface':'space';
+grave.planetName=mode==='surface'?curPlanet.name:'';
+if(graveBeacon){space.remove(graveBeacon);graveBeacon=null;}
+if(graveBeaconSurf){surf.remove(graveBeaconSurf);graveBeaconSurf=null;}
+}
+if(grave.mode==='space'){graveBeacon=buildBeaconMesh();graveBeacon.position.copy(grave.pos);space.add(graveBeacon);}
+applyBeaconVisibility();updateBeaconHUD();}
+function applyBeaconVisibility(){if(!grave)return;const v=grave.beaconVisible;
+if(graveBeacon)graveBeacon.visible=v;
+if(graveBeaconSurf)graveBeaconSurf.visible=v;}
+function updateBeaconHUD(){
+const panel=$('beaconPanel');
+if(!grave){panel.style.display='none';return;}
+panel.style.display='block';
+$('beaconHideBtn').textContent=grave.beaconVisible?'🙈 Скрыть маяк':'👁 Показать маяк';}
+function toggleBeacon(){if(!grave)return;grave.beaconVisible=!grave.beaconVisible;applyBeaconVisibility();updateBeaconHUD();sfx('ui');}
+function abandonGrave(){if(!grave)return;
+if(graveBeacon){space.remove(graveBeacon);graveBeacon=null;}
+if(graveBeaconSurf){surf.remove(graveBeaconSurf);graveBeaconSurf=null;}
+grave=null;updateBeaconHUD();showBanner('❌ Груз заброшен навсегда.','#ff9aa5');sfx('ui');}
+function tryRecoverGrave(){
+if(!grave)return false;
+const right=(grave.mode==='space'&&mode==='space')||(grave.mode==='surface'&&mode==='surface');
+if(right&&player.position.distanceTo(grave.pos)<20){
+restoreItems(grave.inv);P.credits+=grave.credits;
+if(graveBeacon){space.remove(graveBeacon);graveBeacon=null;}
+if(graveBeaconSurf){surf.remove(graveBeaconSurf);graveBeaconSurf=null;}
+grave=null;updateBeaconHUD();sfx('pickup');
+showBanner('📦 Груз возвращён! Кредиты восстановлены.','#7fff9a');
+return true;}
+return false;}
+function nudgePos(pos){
+activePlanets.forEach(function(p){if(p.dead)return;const v=pos.clone().sub(p.pos);const d=v.length();
+if(d>0.01&&d<p.r+5)pos.copy(p.pos).add(v.normalize().multiplyScalar(p.r+5));});
+stars.forEach(function(s){if(s.dead)return;const v=pos.clone().sub(s.pos);const d=v.length();
+if(d>0.01&&d<s.r+5)pos.copy(s.pos).add(v.normalize().multiplyScalar(s.r+5));});
+return pos;}
+function spawnEnemy(){
+if(mode==='surface'){if(enemies.length>=5)return;
+const a=rand(0,Math.PI*2),d=rand(90,150);
+const p=player.position.clone().add(new THREE.Vector3(Math.cos(a)*d,0,Math.sin(a)*d));
+p.y=terrainH(p.x,p.z)+1;enemies.push(mkCrawler(p));}
+else{if(enemies.length>=8)return;
+const cls=pickShip();const a=rand(0,Math.PI*2),d=rand(120,260);
+const p=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*d,rand(-40,60),Math.sin(a)*d)));
+enemies.push(mkShip(cls,p));}}
+function mkCrystal(pos){const m=new THREE.Mesh(G.crystal,new THREE.MeshStandardMaterial({color:0x40e8ff,emissive:0x35e0ff,emissiveIntensity:1.4,roughness:.1,transparent:true,opacity:.92}));
+m.position.y=.8;const g=new THREE.Group();g.add(m);g.position.copy(pos);activeScene.add(g);crystals.push({g:g,taken:false});}
+let bannerTO=null;
+function showBanner(t,col){const b=$('banner');b.innerHTML=t;b.style.color=col||'#ffb020';b.style.borderColor=col||'#ffb020';b.style.opacity=1;clearTimeout(bannerTO);bannerTO=setTimeout(function(){b.style.opacity=0;},3200);}
+function spawnPickup(kind){const dir=camDir();
+const pos=player.position.clone().add(dir.multiplyScalar(rand(60,120))).add(new THREE.Vector3(rand(-40,40),rand(-25,25),rand(-40,40)));
+let m;
+if(kind==='cargo')m=new THREE.Mesh(new THREE.BoxGeometry(2.4,2.4,4),eMat(0x5a6672,0xffb020,.35));
+else if(kind==='artifact')m=new THREE.Mesh(new THREE.IcosahedronGeometry(1.4,0),eMat(0x332200,0xffd25e,1.4));
+else{m=new THREE.Group();const beam=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,40,10,1,true),new THREE.MeshBasicMaterial({color:0xff5566,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));beam.position.y=20;m.add(beam);m.add(new THREE.Mesh(new THREE.SphereGeometry(1.2,12,10),bMat(0xff5566)));pos.copy(player.position.clone().add(dir.setY(0).normalize().multiplyScalar(230)));}
+m.position.copy(pos);space.add(m);pickups.push({kind:kind,m:m,t:60});}
+function makeWreckMesh(working){const g=new THREE.Group();
+const hm=eMat(working?0x1e3a2e:0x2a2a2e,working?0x35e0ff:0x444448,working?.5:.15);
+const hull=new THREE.Mesh(new THREE.BoxGeometry(3,1.4,9),hm);hull.rotation.z=rand(-.3,.3);g.add(hull);
+const w1=new THREE.Mesh(new THREE.BoxGeometry(7,.3,3),hm);w1.rotation.z=rand(-.6,.2);w1.rotation.y=rand(-.3,.3);g.add(w1);
+const w2=new THREE.Mesh(new THREE.BoxGeometry(5,.25,2),hm);w2.position.x=-2;w2.rotation.z=rand(.2,.7);g.add(w2);
+const nose=new THREE.Mesh(new THREE.ConeGeometry(1.2,3,6),hm);nose.rotation.x=Math.PI/2;nose.rotation.z=rand(-.4,.4);nose.position.z=5.5;g.add(nose);
+const flickMat=new THREE.SpriteMaterial({map:glowTex,color:working?0x7fff9a:0xffaa44,blending:THREE.AdditiveBlending,transparent:true,opacity:.5,depthWrite:false});
+const flick=new THREE.Sprite(flickMat);flick.scale.set(4,4,1);flick.position.y=1.5;g.add(flick);
+g.userData.flick=flickMat;
+return g;}
+function spawnDerelict(){const dir=camDir();
+const pos=player.position.clone().add(dir.multiplyScalar(rand(250,500))).add(new THREE.Vector3(rand(-80,80),rand(-40,40),rand(-80,80)));
+const legFound=Math.random()<0.00000001;
+const working=legFound?true:Math.random()<0.15;
+const m=makeWreckMesh(working||legFound);
+m.position.copy(pos);m.rotation.set(rand(0,3),rand(0,3),rand(0,3));space.add(m);
+const reg=PSHIPS.filter(function(s){return !s.leg;});
+const shipId=legFound?['strannik','feniks','leviathan'][Math.floor(rand(0,3))]:reg[Math.floor(rand(0,reg.length))].id;
+pickups.push({kind:'derelict',m:m,working:working,legShip:legFound,shipId:shipId});}
+function spawnWarWrecks(){for(let i=0;i<20;i++){
+const a=rand(0,Math.PI*2),d=rand(60,220);
+const pos=player.position.clone().add(new THREE.Vector3(Math.cos(a)*d,rand(-40,40),Math.sin(a)*d));
+const working=Math.random()<0.03;
+const m=makeWreckMesh(working);
+m.position.copy(pos);m.rotation.set(rand(0,3),rand(0,3),rand(0,3));space.add(m);
+const reg=PSHIPS.filter(function(s){return !s.leg;});
+pickups.push({kind:'wreck',m:m,working:working,shipId:reg[Math.floor(rand(0,reg.length))].id});}
+showBanner('⚔ Бой стих. Вокруг дрейфуют обломки флота — осмотрите их.','#ff9a3c');}
+function handleWreck(pk){space.remove(pk.m);pickups=pickups.filter(function(x){return x!==pk;});
+if(pk.working){grantShip(pk.shipId,0.15);
+showBanner('🛸 РАБОЧИЙ КОРАБЛЬ: '+pshipById(pk.shipId).n+'! Нужен ремонт на станции.','#7fff9a');}
+else{const r=Math.random();
+if(r<.3){invAdd('plating',1+Math.floor(rand(0,3)));toast('Собрана обшивка с обломков','#9fb0c0');}
+else if(r<.5){P.credits+=Math.floor(rand(20,80));toast('Найдены кредиты в обломках','#ffb020');}
+else toast('Обломки бесполезны','#7fa2bd');}
+sfx('pickup');}
+function handleDerelict(pk){space.remove(pk.m);pickups=pickups.filter(function(x){return x!==pk;});
+const r=Math.random();
+if(pk.legShip){grantShip(pk.shipId,1);showBanner('🌟 НАЙДЕН КОРАБЛЬ УТ: '+pshipById(pk.shipId).n,'#ffd25e');}
+else if(r<.12)dropLegendaryPart();
+else if(r<.28){grantShip(pk.shipId,0.4);showBanner('🚢 Заброшенный корабль на ходу: '+pshipById(pk.shipId).n,'#7fff9a');}
+else if(r<.6){invAdd('plating',2);invAdd('engineP',1);}
+else{P.credits+=Math.floor(rand(50,200));toast('Найдены кредиты на заброшенном корабле','#ffb020');}
+sfx('pickup');}
+function triggerEvent(){if(mode!=='space')return;
+const r=Math.random();
+if(r<.2){showBanner('⚠️ ПАТРУЛЬ СЮНХЭН обнаружил вас!','#ff5566');
+for(let i=0;i<3;i++){const a=rand(0,Math.PI*2);
+const p=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*80,rand(-15,20),Math.sin(a)*80)));
+const cls=SHIPS[Math.floor(rand(0,6))];const e=mkShip(cls,p);e.aggro=true;e.ind.visible=true;enemies.push(e);}}
+else if(r<.42){showBanner('📦 Обнаружен грузовой контейнер','#ffd25e');spawnPickup('cargo');}
+else if(r<.54){showBanner('✨ Древний артефакт…','#8aefff');spawnPickup('artifact');}
+else if(r<.7){showBanner('☄ МЕТЕОРИТНЫЙ ПОТОК','#ff9a3c');
+for(let i=0;i<10;i++){const m=new THREE.Mesh(G.met,eMat(0x3a2a20,0xff6a28,.8));m.scale.setScalar(rand(.7,1.6));const a=rand(0,Math.PI*2);
+m.position.copy(player.position).add(new THREE.Vector3(Math.cos(a)*rand(120,220),rand(-60,60),Math.sin(a)*rand(120,220)));
+const vel=player.position.clone().sub(m.position).normalize().multiplyScalar(rand(28,50));
+space.add(m);meteors.push({m:m,vel:vel,life:14});}}
+else{showBanner('🆘 Сигнал бедствия: маяк поблизости','#ff8899');spawnPickup('beacon');}}
+const SHIPS=[
+{n:'Оса',t:1,k:0,len:2.5,hp:25,spd:26,dmg:6,fr:.9,col:0x7dff9e},{n:'Жало',t:1,k:0,len:3,hp:35,spd:24,dmg:8,fr:.8,col:0x8affc0},{n:'Коготь',t:1,k:0,len:3,hp:45,spd:24,dmg:9,fr:.8,col:0x9affd0},
+{n:'Рой',t:2,k:1,len:3.5,hp:60,spd:22,dmg:12,fr:.9,col:0xa0ffb0},{n:'Клинок',t:2,k:1,len:4,hp:75,spd:21,dmg:14,fr:.9,col:0xb0ffb8},{n:'Шип',t:2,k:1,len:4,hp:85,spd:20,dmg:15,fr:1,col:0x90f0a0},{n:'Гарпия',t:2,k:0,len:4,hp:95,spd:19,dmg:16,fr:1,col:0x80e090},
+{n:'Корвет Страж',t:3,k:2,len:6,hp:150,spd:14,dmg:22,fr:1.2,col:0x70d080},{n:'Корвет Клинок Тьмы',t:3,k:2,len:6.5,hp:180,spd:13,dmg:25,fr:1.2,col:0x60c070},
+{n:'Фрегат Вестник',t:4,k:2,len:8,hp:260,spd:12,dmg:32,fr:1.4,col:0x50b060},{n:'Фрегат Кара',t:4,k:2,len:8.5,hp:300,spd:11,dmg:36,fr:1.4,col:0x60a050},{n:'Эсминец Гроза',t:4,k:2,len:9,hp:360,spd:11,dmg:40,fr:1.5,col:0x709040},
+{n:'Эсминец Бич',t:5,k:2,len:10,hp:430,spd:10,dmg:46,fr:1.5,col:0x808030},{n:'Крейсер Затмение',t:5,k:2,len:12,hp:550,spd:9,dmg:55,fr:1.6,col:0x907020},{n:'Крейсер Полночь',t:5,k:2,len:13,hp:650,spd:9,dmg:62,fr:1.7,col:0xa06020},
+{n:'Крейсер Рок',t:6,k:2,len:14,hp:780,spd:8,dmg:70,fr:1.8,col:0xb05020},{n:'Носитель Улей',t:6,k:2,len:16,hp:900,spd:7,dmg:75,fr:1.8,col:0xc04020},{n:'Линкор Владыка',t:6,k:2,len:18,hp:1100,spd:7,dmg:85,fr:2,col:0xd03020},
+{n:'Линкор Тиран',t:7,k:2,len:20,hp:1350,spd:6,dmg:95,fr:2,col:0xe02020},{n:'Линкор Гегемон',t:7,k:2,len:22,hp:1600,spd:6,dmg:105,fr:2.2,col:0xff2020},{n:'Дредноут Апокалипсис',t:7,k:2,len:24,hp:2000,spd:5,dmg:120,fr:2.3,col:0xff2535},
+{n:'Дредноут Судный День',t:8,k:2,len:26,hp:2500,spd:5,dmg:140,fr:2.4,col:0xff2a4a},{n:'Дредноут Пепел',t:8,k:2,len:28,hp:3000,spd:4,dmg:160,fr:2.5,col:0xff3060},{n:'Титан Пожиратель',t:8,k:2,len:32,hp:3800,spd:4,dmg:190,fr:2.6,col:0xff3575},
+{n:'Титан Истребитель Миров',t:9,k:2,len:36,hp:4800,spd:3,dmg:230,fr:2.8,col:0xff3a8a},{n:'Титан Конец Эпох',t:9,k:2,len:40,hp:6000,spd:3,dmg:280,fr:3,col:0xff40a0},
+{n:'Гаситель Сумрак',t:9,k:3,len:46,hp:8000,spd:2.5,dmg:600,fr:5,col:0xff2244},{n:'Гаситель Мгла',t:10,k:3,len:52,hp:11000,spd:2.2,dmg:900,fr:5.5,col:0xff1133},{n:'Гаситель Аннигилятор',t:10,k:3,len:58,hp:15000,spd:2,dmg:1400,fr:6,col:0xff0022},{n:'Гаситель Звёзд Абсолют',t:10,k:3,len:66,hp:22000,spd:1.8,dmg:2000,fr:7,col:0xff0011}];
+function pickShip(){const r=Math.random();let m;if(r<.4)m=2;else if(r<.7)m=4;else if(r<.85)m=6;else if(r<.95)m=8;else m=10;const p=SHIPS.filter(function(s){return s.t<=m;});return p[Math.floor(Math.random()*p.length)];}
+function buildShip(cls){
+const g=new THREE.Group(),L=cls.len;
+const hm=eMat(0x141f1a,cls.col,.45);const hm2=eMat(0x0d1512,cls.col,.3);
+const hull=new THREE.Mesh(new THREE.BoxGeometry(L*.3,L*.14,L),hm);g.add(hull);
+const keel=new THREE.Mesh(new THREE.BoxGeometry(L*.16,L*.1,L*.85),hm2);keel.position.y=-L*.1;g.add(keel);
+const spine=new THREE.Mesh(new THREE.BoxGeometry(L*.1,L*.12,L*.7),hm2);spine.position.y=L*.1;g.add(spine);
+const nose=new THREE.Mesh(new THREE.ConeGeometry(L*.16,L*.4,6),hm);nose.rotation.x=Math.PI/2;nose.position.z=L*.68;g.add(nose);
+const stripe=new THREE.Mesh(new THREE.BoxGeometry(L*.32,L*.02,L*.5),bMat(cls.col));stripe.position.y=L*.08;g.add(stripe);
+if(cls.t>=2){const cock=new THREE.Mesh(new THREE.SphereGeometry(L*.09,8,6),eMat(0x06121a,cls.col,1.1));cock.position.set(0,L*.09,L*.3);cock.scale.set(1,.6,1.4);g.add(cock);}
+const eng1=new THREE.Mesh(new THREE.CylinderGeometry(L*.06,L*.08,L*.18,8),hm2);eng1.rotation.x=Math.PI/2;eng1.position.set(L*.08,0,-L*.52);g.add(eng1);
+const eng2=eng1.clone();eng2.position.x=-L*.08;g.add(eng2);
+const glow1=new THREE.Mesh(sGeo(L*.07),bMat(cls.col));glow1.position.set(L*.08,0,-L*.6);g.add(glow1);
+const glow2=glow1.clone();glow2.position.x=-L*.08;g.add(glow2);
+g.userData.engines=[glow1,glow2];
+if(cls.k===0){
+const wgeo=new THREE.BoxGeometry(L*.55,L*.03,L*.28);
+const w1=new THREE.Mesh(wgeo,hm);w1.position.set(L*.35,0,-L*.1);w1.rotation.z=-.18;g.add(w1);
+const w2=new THREE.Mesh(wgeo,hm);w2.position.set(-L*.35,0,-L*.1);w2.rotation.z=.18;g.add(w2);
+const t1=new THREE.Mesh(sGeo(L*.03),bMat(cls.col));t1.position.set(L*.6,0,-L*.1);g.add(t1);
+const t2=t1.clone();t2.position.x=-L*.6;g.add(t2);}
+else if(cls.k===1){
+const w1=new THREE.Mesh(new THREE.BoxGeometry(L*.5,L*.03,L*.24),hm);w1.position.set(L*.32,0,-L*.15);w1.rotation.z=-.25;g.add(w1);
+const w2=w1.clone();w2.position.x=-L*.32;w2.rotation.z=.25;g.add(w2);
+const c1=new THREE.Mesh(new THREE.BoxGeometry(L*.3,L*.02,L*.12),hm);c1.position.set(L*.2,0,L*.35);g.add(c1);
+const c2=c1.clone();c2.position.x=-L*.2;g.add(c2);}
+else if(cls.k===2){
+const p1=new THREE.Mesh(new THREE.BoxGeometry(L*.4,L*.05,L*.5),hm2);p1.position.set(L*.24,0,0);p1.rotation.z=-.1;g.add(p1);
+const p2=p1.clone();p2.position.x=-L*.24;p2.rotation.z=.1;g.add(p2);
+if(cls.t>=5){for(let i=0;i<Math.min(cls.t-3,4);i++){
+const td=new THREE.Mesh(new THREE.SphereGeometry(L*.06,8,6),hm);td.position.set((i%2?1:-1)*L*.14,L*.1,L*(.25-i*.18));g.add(td);
+const bar=new THREE.Mesh(new THREE.CylinderGeometry(L*.015,L*.015,L*.14,6),hm2);bar.rotation.x=Math.PI/2;bar.position.set((i%2?1:-1)*L*.14,L*.12,L*(.32-i*.18));g.add(bar);}}
+const fin=new THREE.Mesh(new THREE.BoxGeometry(L*.05,L*.3,L*.35),hm);fin.position.y=L*.16;fin.position.z=-L*.25;g.add(fin);}
+else{
+const cannon=new THREE.Mesh(new THREE.CylinderGeometry(L*.09,L*.13,L*.7,10),hm2);cannon.rotation.x=Math.PI/2;cannon.position.z=L*.55;g.add(cannon);
+const tip=new THREE.Mesh(sGeo(L*.12),bMat(cls.col));tip.position.z=L*.92;g.add(tip);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(L*.28,L*.03,8,24),bMat(cls.col));ring.position.z=L*.4;g.add(ring);
+g.userData.spin=ring;
+const w1=new THREE.Mesh(new THREE.BoxGeometry(L*.7,L*.06,L*.4),hm);w1.position.set(L*.4,0,-L*.1);g.add(w1);
+const w2=w1.clone();w2.position.x=-L*.4;g.add(w2);}
+return g;}
+function makeBar(w){const grp=new THREE.Group();
+const bg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*.09),new THREE.MeshBasicMaterial({color:0x222233,transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));
+const fg=new THREE.Mesh(new THREE.PlaneGeometry(w,w*.09),new THREE.MeshBasicMaterial({color:0xff4455,side:THREE.DoubleSide,depthWrite:false}));
+fg.position.z=.02;grp.add(bg);grp.add(fg);grp.userData={fg:fg,w:w};return grp;}
+function mkShip(cls,pos){const g=buildShip(cls);g.position.copy(pos);activeScene.add(g);
+const hp=Math.round(cls.hp*(1+P.threat*.12)*rand(.9,1.15));
+const ind=new THREE.Sprite(new THREE.SpriteMaterial({map:exclTex,transparent:true,depthWrite:false}));
+ind.scale.set(cls.len*.5+1.4,cls.len*.5+1.4,1);ind.position.y=cls.len*.5+1.5;ind.visible=false;g.add(ind);
+let bar=null;if(cls.t>=3){bar=makeBar(clamp(cls.len*1.2,8,40));bar.position.y=cls.len*.5+3;g.add(bar);}
+return{g:g,type:'ship',cls:cls,hp:hp,maxHp:hp,fireT:rand(1,2),ph:rand(0,6),spd:cls.spd,meleeCd:0,flash:0,dir:new THREE.Vector3(),dead:false,aggro:false,ind:ind,aggroR:50+cls.t*8,hitA:1,wander:new THREE.Vector3(),wT:0,bar:bar,nemesis:false};}
+function mkCrawler(pos){
+const g=new THREE.Group();
+const bodyMat=eMat(0x16241a,0x8aff5e,.5);const shellMat=eMat(0x0e1a10,0x4a7a3a,.35);
+const body=new THREE.Mesh(new THREE.SphereGeometry(1,12,10),bodyMat);body.scale.set(1.2,.6,1.6);body.position.y=.6;g.add(body);
+const shell=new THREE.Mesh(new THREE.SphereGeometry(1.05,12,10),shellMat);shell.scale.set(1.1,.4,1.4);shell.position.y=.85;g.add(shell);
+const head=new THREE.Mesh(new THREE.BoxGeometry(.7,.5,.6),bodyMat);head.position.set(0,.6,1.6);g.add(head);
+const eyeL=new THREE.Mesh(sGeo(.09),bMat(0xff2244));eyeL.position.set(.2,.7,1.95);g.add(eyeL);
+const eyeR=eyeL.clone();eyeR.position.x=-.2;g.add(eyeR);
+const mandL=new THREE.Mesh(new THREE.ConeGeometry(.06,.4,6),shellMat);mandL.position.set(.3,.5,2);mandL.rotation.x=Math.PI/2;g.add(mandL);
+const mandR=mandL.clone();mandR.position.x=-.3;g.add(mandR);
+const legs=[];
+for(let i=0;i<6;i++){
+const side=i%2?1:-1;const row=Math.floor(i/2);
+const lg=new THREE.Group();lg.position.set(side*1.0,.5,(row-1)*1.1);
+const upper=new THREE.Mesh(new THREE.BoxGeometry(.7,.12,.14),shellMat);upper.position.x=side*.35;upper.rotation.z=side*-.4;lg.add(upper);
+const lower=new THREE.Mesh(new THREE.BoxGeometry(.14,.6,.14),shellMat);lower.position.set(side*.7,-.2,0);lg.add(lower);
+g.add(lg);legs.push(lg);}
+g.userData.legs=legs;
+const ind=new THREE.Sprite(new THREE.SpriteMaterial({map:exclTex,transparent:true,depthWrite:false}));ind.scale.set(1.4,1.4,1);ind.position.y=2.6;ind.visible=false;g.add(ind);
+g.position.copy(pos);activeScene.add(g);
+const hp=Math.round(45*(1+P.threat*.15)*rand(.85,1.25));
+return{g:g,type:'crawler',hp:hp,maxHp:hp,fireT:0,ph:rand(0,6),spd:7,meleeCd:0,flash:0,dir:new THREE.Vector3(),dead:false,aggro:false,ind:ind,aggroR:42,hitA:1,wander:new THREE.Vector3(),wT:0,bar:null,nemesis:false};}
+function aggroEnemy(e){if(e.dead||e.aggro)return;e.aggro=true;e.ind.visible=true;sfx('ui');}
+const SECT=1600;const sectors=new Map(),sectorQueue=[];
+let activePlanets=[],stars=[],bhs=[],debris=[],capitalShots=[],secLoadT=0,secTick=0;
+function sectorKey(sx,sz){return sx+','+sz;}
+function planetTexture(B,seed){const w=320,h=160,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d'),img=g.createImageData(w,h);
+const low=new THREE.Color(B.low),mid=new THREE.Color(B.mid),high=new THREE.Color(B.high);const wat=B.water?new THREE.Color(B.water):null,wat2=wat?wat.clone().multiplyScalar(.55):null;
+for(let y=0;y<h;y++)for(let x=0;x<w;x++){const n=fbm(x*2.6,y*2.6,seed),n2=fbm(x*1.1+90,y*1.1,seed+50);let col;
+if(wat&&n<.44)col=n<.34?wat2.clone().lerp(wat,(n-.14)/.2):wat.clone().lerp(new THREE.Color(0xbfd8dd),(n-.42)/.02*.5);
+else{const t=clamp((n-.44)/.56,0,1);col=t<.5?low.clone().lerp(mid,t*2):mid.clone().lerp(high,(t-.5)*2);if(n2>.63)col.multiplyScalar(.7);}
+const lat=Math.abs(y/h-.5)*2;if(lat>.82&&lat>.82+(n2-.5)*.14)col.lerp(new THREE.Color(0xf2f6fa),clamp((lat-.82)/.14,0,1)*.9);
+const i=(y*w+x)*4;img.data[i]=col.r*255;img.data[i+1]=col.g*255;img.data[i+2]=col.b*255;img.data[i+3]=255;}
+g.putImageData(img,0,0);return new THREE.CanvasTexture(c);}
+const atmoVS='varying vec3 vN,vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}';
+const atmoFS='uniform vec3 uC;varying vec3 vN,vV;void main(){float f=pow(1.-abs(dot(vN,vV)),2.8);gl_FragColor=vec4(uC,f*1.2);}';
+function cloudTexture(){const cc=document.createElement('canvas');cc.width=256;cc.height=128;const cg=cc.getContext('2d');for(let i=0;i<180;i++){cg.fillStyle='rgba(255,255,255,'+rand(.04,.2).toFixed(2)+')';cg.beginPath();cg.ellipse(rand(0,256),rand(0,128),rand(6,26),rand(3,9),0,0,7);cg.fill();}return new THREE.CanvasTexture(cc);}
+function makePlanetObj(grp,sPos,orbR,r,biome,seed,name,sysKey,extra){
+const B=BIOMES[biome];
+const mesh=new THREE.Mesh(new THREE.SphereGeometry(r,48,32),new THREE.MeshStandardMaterial({map:planetTexture(B,seed),roughness:.9}));
+const atmo=new THREE.Mesh(new THREE.SphereGeometry(r*1.07,32,24),new THREE.ShaderMaterial({vertexShader:atmoVS,fragmentShader:atmoFS,uniforms:{uC:{value:new THREE.Color(B.sky).lerp(new THREE.Color(0xffffff),.3)}},transparent:true,blending:THREE.AdditiveBlending,side:THREE.BackSide,depthWrite:false}));
+const clouds=new THREE.Mesh(new THREE.SphereGeometry(r*1.03,32,24),new THREE.MeshStandardMaterial({map:cloudTexture(),transparent:true,opacity:.8,depthWrite:false}));
+grp.add(mesh);grp.add(atmo);grp.add(clouds);
+const hp=extra&&extra.hp?extra.hp:Math.round(r*45);
+const p={mesh:mesh,atmo:atmo,clouds:clouds,r:r,seed:seed,biome:biome,pos:new THREE.Vector3(),angle:rand(0,6.28),orbR:orbR,orbSpeed:(.012+Math.random()*.03)*(Math.random()<.5?1:-1),incl:Math.random()*.12,starPos:sPos,name:name,sysKey:sysKey,home:false,sunhen:false,hp:hp,maxHp:hp,dead:false};
+if(extra)for(const k in extra)p[k]=extra[k];return p;}
+function buildSector(sx,sz){
+const key=sectorKey(sx,sz);if(sectors.has(key))return;
+const home=(sx===HOME_SECT.x&&sz===HOME_SECT.z),sunhen=(sx===SUNHEN_SECT.x&&sz===SUNHEN_SECT.z);
+const rng=mulberry32(coordHash(sx,sz));
+if(!home&&!sunhen&&rng()>.62){sectors.set(key,{empty:true});return;}
+const grp=new THREE.Group();
+const isBH=!home&&!sunhen&&rng()<.12;
+const sPos=home?HOME_STAR_POS.clone():sunhen?SUNHEN_STAR_POS.clone():new THREE.Vector3((sx+.25+rng()*.5)*SECT,(rng()-.4)*600,(sz+.25+rng()*.5)*SECT);
+const entry={grp:grp,planets:[],star:null,bh:null};
+let starR=home?90:sunhen?110:60+rng()*80;
+if(isBH){const roll=rng();const R=roll<.55?28+rng()*22:(roll<.85?55+rng()*35:95+rng()*70);starR=R;
+const bhGrp=new THREE.Group();bhGrp.position.copy(sPos);
+bhGrp.add(new THREE.Mesh(new THREE.SphereGeometry(R,32,24),new THREE.MeshBasicMaterial({color:0x000000})));
+const wrap=new THREE.Group();wrap.rotation.x=Math.PI/2*.92+rng()*.3;
+const dc=document.createElement('canvas');dc.width=dc.height=256;const dg=dc.getContext('2d');const dgr=dg.createRadialGradient(128,128,30,128,128,128);
+dgr.addColorStop(0,'rgba(0,0,0,0)');dgr.addColorStop(.45,'rgba(255,190,90,.95)');dgr.addColorStop(.62,'rgba(255,110,40,.55)');dgr.addColorStop(1,'rgba(80,20,120,0)');
+dg.fillStyle=dgr;dg.fillRect(0,0,256,256);
+const disk=new THREE.Mesh(new THREE.RingGeometry(R*1.25,R*3.1,40),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(dc),transparent:true,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}));
+wrap.add(disk);bhGrp.add(wrap);grp.add(bhGrp);
+entry.bh={pos:sPos,r:R,disk:disk,sysKey:key};bhs.push(entry.bh);}
+else{const tRoll=(home||sunhen)?.1:rng();
+const sType=tRoll<.55?{col:0xffd890,i:2.2}:tRoll<.8?{col:0xff8a55,i:1.9}:{col:0xaadcff,i:2.4};
+const sm=new THREE.Mesh(new THREE.SphereGeometry(starR,32,24),new THREE.MeshBasicMaterial({color:sType.col}));sm.position.copy(sPos);grp.add(sm);
+const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:sType.col,blending:THREE.AdditiveBlending,depthWrite:false}));
+gl.scale.set(starR*4,starR*4,1);gl.position.copy(sPos);grp.add(gl);
+const shp=Math.round(starR*250);
+const so={pos:sPos,col:sType.col,i:sType.i,r:starR,sysKey:key,mesh:sm,glow:gl,parent:grp,hp:shp,maxHp:shp,name:'Звезда '+(home?'Гелиос':sunhen?'Сюнхэн-Кси':String.fromCharCode(65+Math.floor(rng()*26))+'-'+(Math.abs(sx)+Math.abs(sz))),dead:false};
+entry.star=so;stars.push(so);}
+const n=home?2:sunhen?2:(1+Math.floor(rng()*4));
+let prevEdge=starR*2.2;
+for(let i=0;i<n;i++){
+const r=home&&i===0?HOME_ORB.pr:sunhen&&i===0?SUNHEN_ORB.pr:30+rng()*85;
+let orbR=Math.max(prevEdge+r+45,starR*2.5+i*(starR*1.2+70)+rng()*80);if(orbR>760)break;prevEdge=orbR+r;
+const biome=home&&i===0?'grass':sunhen&&i===0?'volcanic':BIOME_KEYS[Math.floor(rng()*5)];
+let p;
+if(home&&i===0){p=makePlanetObj(grp,sPos,HOME_ORB.r,HOME_ORB.pr,biome,4242,'Гелиос-Прайм',key,{home:true,orbSpeed:HOME_ORB.sp,phase0:HOME_ORB.ph,incl:HOME_ORB.incl});
+const ring=new THREE.Mesh(new THREE.TorusGeometry(HOME_ORB.pr*1.55,.9,8,48),bMat(0xffd25e));ring.rotation.x=Math.PI/2*.4;p.mesh.add(ring);}
+else if(sunhen&&i===0){p=makePlanetObj(grp,sPos,SUNHEN_ORB.r,SUNHEN_ORB.pr,biome,6666,'СЮНХЭН: ПРАЙМ-УЛЕЙ',key,{sunhen:true,hp:40000,orbSpeed:SUNHEN_ORB.sp,phase0:SUNHEN_ORB.ph,incl:SUNHEN_ORB.incl});
+const ring=new THREE.Mesh(new THREE.TorusGeometry(SUNHEN_ORB.pr*1.6,1.2,8,48),bMat(0xff2244));ring.rotation.x=Math.PI/2*.4;p.mesh.add(ring);}
+else p=makePlanetObj(grp,sPos,orbR,r,biome,rng()*1000,'Планета '+String.fromCharCode(65+Math.floor(rng()*26))+'-'+(i+1),key);
+entry.planets.push(p);activePlanets.push(p);}
+if(home||sunhen||rng()<.18){
+const sd2=new THREE.Vector3(rand(-1,1),rand(-.3,.3),rand(-1,1)).normalize();
+const spos=sPos.clone().add(sd2.multiplyScalar(starR+120));
+const smesh=buildStationMesh();smesh.grp.position.copy(spos);grp.add(smesh.grp);
+stations.push({pos:spos,mesh:smesh.grp,ring:smesh.ring,beacons:smesh.beacons,sysKey:key,name:'Станция '+(home?'ГЕЛИОС':sunhen?'ФОРПОСТ':String.fromCharCode(65+Math.floor(rng()*26))+'-'+(Math.abs(sx)+Math.abs(sz)))});}
+space.add(grp);sectors.set(key,entry);}
+function unloadSector(key){const e=sectors.get(key);if(!e||e.empty){sectors.delete(key);return;}
+space.remove(e.grp);
+e.grp.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){if(m.map)m.map.dispose();m.dispose();});}});
+activePlanets=activePlanets.filter(function(p){return p.sysKey!==key;});
+stars=stars.filter(function(s){return s.sysKey!==key;});
+bhs=bhs.filter(function(b){return b.sysKey!==key;});
+stations=stations.filter(function(s){return s.sysKey!==key;});
+sectors.delete(key);}
+function streamingUpdate(anchor){const cx=Math.floor(anchor.x/SECT),cz=Math.floor(anchor.z/SECT);
+const want=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)want.push(sectorKey(cx+dx,cz+dz));
+for(const k of Array.from(sectors.keys())){const a=k.split(',');if(Math.abs(+a[0]-cx)>2||Math.abs(+a[1]-cz)>2)unloadSector(k);}
+for(const k of want)if(!sectors.has(k)&&sectorQueue.indexOf(k)<0)sectorQueue.push(k);
+secLoadT-=1;
+if(sectorQueue.length&&secLoadT<=0){secLoadT=1;
+sectorQueue.sort(function(A,B){const a=A.split(','),b=B.split(',');return Math.hypot(+a[0]-cx,+a[1]-cz)-Math.hypot(+b[0]-cx,+b[1]-cz);});
+const parts=sectorQueue.shift().split(',');buildSector(+parts[0],+parts[1]);}}
+function destroyPlanetObj(p){const e=sectors.get(p.sysKey);if(e&&e.planets)e.planets=e.planets.filter(function(x){return x!==p;});
+if(e&&e.grp){e.grp.remove(p.mesh);e.grp.remove(p.atmo);e.grp.remove(p.clouds);}
+p.mesh.geometry.dispose();p.atmo.geometry.dispose();p.clouds.geometry.dispose();
+activePlanets=activePlanets.filter(function(x){return x!==p;});p.dead=true;
+if(barTarget===p){barTarget=null;barT=0;}}
+function planetExplosion(pos,R){const s=new THREE.Mesh(sGeo(1),new THREE.MeshBasicMaterial({color:0xffc070,transparent:true,opacity:.95,blending:THREE.AdditiveBlending}));
+s.position.copy(pos);s.scale.setScalar(R*.8);addFx(s,.9,function(k){s.scale.setScalar(R*(.8+k*2.6));s.material.opacity=.95*(1-k);});
+const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd0a0,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:1}));
+fl.position.copy(pos);fl.scale.set(R*8,R*8,1);addFx(fl,.7,function(k){fl.material.opacity=1-k;});
+if(debris.length<50){for(let i=0;i<12;i++){const d=new THREE.Mesh(G.met,eMat(0x5a4636,0xff6a28,.5));d.position.copy(pos);d.scale.setScalar(R*rand(.05,.14));
+d.userData.vel=new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize().multiplyScalar(rand(30,90));space.add(d);debris.push({m:d,life:2.6});}}
+sfx('boom');const pd=player.position.distanceTo(pos);shake=Math.min(.8,shake+clamp(1.2-pd/900,0,.8));
+bloomBoost=Math.max(bloomBoost,.8);chromBoost=Math.max(chromBoost,.4);
+secondaryExplosion(pos);
+if(pd<R*4.5)damagePlayer(clamp(90-pd/R*8,15,80));}
+function planetKillFX(p){const pos=p.pos.clone(),R=p.r;slowT=1.2;
+$('whiteOv').style.opacity=.85;setTimeout(function(){$('whiteOv').style.opacity=0;},450);shake=1;
+const s=new THREE.Mesh(sGeo(1),new THREE.MeshBasicMaterial({color:0xfff0d0,transparent:true,opacity:1,blending:THREE.AdditiveBlending}));
+s.position.copy(pos);s.scale.setScalar(R*.6);addFx(s,1.3,function(k){s.scale.setScalar(R*(.6+k*5));s.material.opacity=1-k;});
+const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffe0b0,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:1}));
+fl.position.copy(pos);fl.scale.set(R*14,R*14,1);addFx(fl,1.1,function(k){fl.material.opacity=1-k;});
+if(debris.length<50){for(let i=0;i<26;i++){const d=new THREE.Mesh(G.met,eMat(0x6a5040,0xff7830,.7));d.position.copy(pos);d.scale.setScalar(R*rand(.04,.13));
+d.userData.vel=new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize().multiplyScalar(rand(40,140));space.add(d);debris.push({m:d,life:3.5});}}
+sfx('boom');setTimeout(function(){sfx('boom');},220);bloomBoost=Math.max(bloomBoost,1.2);chromBoost=Math.max(chromBoost,.6);
+setTimeout(function(){secondaryExplosion(pos);},300);
+setTimeout(function(){secondaryExplosion(pos);},550);}
+function planetLoot(p){const cr=Math.floor(150+rand(0,400)+p.r*2);P.credits+=cr;
+const cry=6+Math.floor(rand(0,10));for(let i=0;i<cry;i++)invAdd('crystal',1);
+if(Math.random()<.6)invAdd('core',1+(Math.random()<.4?1:0));
+const pool=['bigmed','shieldmod','kicell','jetfix'];
+for(let i=0;i<3;i++)if(Math.random()<.75)invAdd(pool[Math.floor(Math.random()*pool.length)],1);
+if(p.sunhen){invAdd('sunshard',1);showBanner('👽 ПРАЙМ-УЛЕЙ СЮНХЭН ПАЛ! +1 🌞','#ff2244');}
+showBanner('💥 ПЛАНЕТА '+p.name.toUpperCase()+' УНИЧТОЖЕНА • +'+cr+' 💰','#ff9a3c');}
+function destroyByPlayer(p){if(p.home)return;planetKillFX(p);planetLoot(p);destroyPlanetObj(p);}
+function destroyByShip(p){if(p.home||p.sunhen)return;planetExplosion(p.pos,p.r);destroyPlanetObj(p);}
+function destroyStar(s){if(s.dead)return;s.dead=true;slowT=1.4;
+$('whiteOv').style.opacity=1;setTimeout(function(){$('whiteOv').style.opacity=0;},600);shake=1;
+const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xfff5d0,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:1}));
+fl.position.copy(s.pos);fl.scale.set(s.r*20,s.r*20,1);addFx(fl,1.4,function(k){fl.material.opacity=1-k;});
+const sh=new THREE.Mesh(sGeo(1),new THREE.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:1,blending:THREE.AdditiveBlending}));
+sh.position.copy(s.pos);sh.scale.setScalar(s.r);addFx(sh,1.5,function(k){sh.scale.setScalar(s.r*(1+k*6));sh.material.opacity=1-k;});
+if(debris.length<50){for(let i=0;i<30;i++){const d=new THREE.Mesh(G.met,eMat(0xffcc66,0xffaa22,.8));d.position.copy(s.pos);d.scale.setScalar(s.r*rand(.03,.1));
+d.userData.vel=new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize().multiplyScalar(rand(60,200));space.add(d);debris.push({m:d,life:4});}}
+sfx('boom');setTimeout(function(){sfx('boom');},200);setTimeout(function(){sfx('boom');},450);
+bloomBoost=Math.max(bloomBoost,1.5);chromBoost=Math.max(chromBoost,.8);
+setTimeout(function(){secondaryExplosion(s.pos);},300);
+setTimeout(function(){secondaryExplosion(s.pos);},600);
+setTimeout(function(){secondaryExplosion(s.pos);},900);
+const cr=2000+Math.floor(rand(0,3000));P.credits+=cr;
+const cry=30+Math.floor(rand(0,30));for(let i=0;i<cry;i++)invAdd('crystal',1);
+const cores=3+Math.floor(rand(0,4));for(let i=0;i<cores;i++)invAdd('core',1);
+let msg='⭐ ЗВЕЗДА '+s.name.toUpperCase()+' УНИЧТОЖЕНА • +'+cr+' 💰';
+if(Math.random()<0.06){invAdd('sunshard',1);msg+=' • 🌞 ОСКОЛОК БРОНИ СОЛНЦА!';}
+if(Math.random()<0.10)dropLegendaryPart();
+addCodex('star');
+showBanner(msg,'#ffd25e');
+if(s.parent){s.parent.remove(s.mesh);s.parent.remove(s.glow);}
+s.mesh.geometry.dispose();s.mesh.material.dispose();
+stars=stars.filter(function(x){return x!==s;});
+const entry=sectors.get(s.sysKey);if(entry&&entry.star===s)entry.star=null;
+if(barTarget===s){barTarget=null;barT=0;}}
+function planetCollisions(){for(let i=0;i<activePlanets.length;i++)for(let j=i+1;j<activePlanets.length;j++){
+const a=activePlanets[i],b=activePlanets[j];
+if(a.home||b.home||a.sunhen||b.sunhen)continue;
+if(mode==='surface'&&(a.sysKey===curPlanet.sysKey||b.sysKey===curPlanet.sysKey))continue;
+const d=a.pos.distanceTo(b.pos);
+if(d<(a.r+b.r)*.95){const mid=a.pos.clone().add(b.pos).multiplyScalar(.5);
+planetExplosion(mid,Math.max(a.r,b.r));destroyPlanetObj(a);destroyPlanetObj(b);return;}}}
+const hemi=new THREE.HemisphereLight(0xffffff,0x334455,.5);surf.add(hemi);
+const dSun=new THREE.DirectionalLight(0xffffff,.95);surf.add(dSun);
+surf.add(new THREE.AmbientLight(0xffffff,.1));
+space.add(new THREE.AmbientLight(0x223344,.55));
+const starLight=new THREE.PointLight(0xffe8c0,1.5,6000);space.add(starLight);
+const bgGroup=new THREE.Group();space.add(bgGroup);
+(function(){const n=4000,pos=new Float32Array(n*3),col=new Float32Array(n*3);
+for(let i=0;i<n;i++){const r=rand(2500,6000),t=rand(0,Math.PI*2),p=Math.acos(rand(-1,1));pos[i*3]=r*Math.sin(p)*Math.cos(t);pos[i*3+1]=r*Math.cos(p);pos[i*3+2]=r*Math.sin(p)*Math.sin(t);
+const cc=new THREE.Color().setHSL(rand(.05,.7),rand(.2,.7),rand(.6,1));col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b;}
+const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.BufferAttribute(pos,3));sg.setAttribute('color',new THREE.BufferAttribute(col,3));
+bgGroup.add(new THREE.Points(sg,new THREE.PointsMaterial({size:3.4,vertexColors:true,sizeAttenuation:true})));})();
+let curPlanet=null,sunAngle=1.1,surfDust=null;
+const chunks=new Map(),CH=64,RES=24;
+let structures=[],structCols=[];
+function terrainH(x,z){const s=curPlanet.seed;let h=(fbm(x,z,s)-.5)*2*26+fbm(x*.35,z*.35,s+77)*18-9;const d=Math.hypot(x,z);if(d<30)h*=d/30;return h;}
+function buildChunk(cx,cz){const key=cx+','+cz;if(chunks.has(key))return;
+const B=BIOMES[curPlanet.biome],low=new THREE.Color(B.low),mid=new THREE.Color(B.mid),high=new THREE.Color(B.high);
+const geo=new THREE.PlaneGeometry(CH,CH,RES,RES);geo.rotateX(-Math.PI/2);
+const pos=geo.attributes.position,cols=new Float32Array(pos.count*3);
+for(let i=0;i<pos.count;i++){const x=cx*CH+pos.getX(i),z=cz*CH+pos.getZ(i),h=terrainH(x,z);pos.setY(i,h);
+const t=clamp((h+25)/55,0,1),c=t<.5?low.clone().lerp(mid,t*2):mid.clone().lerp(high,(t-.5)*2);
+cols[i*3]=c.r;cols[i*3+1]=c.g;cols[i*3+2]=c.b;}
+geo.setAttribute('color',new THREE.BufferAttribute(cols,3));geo.computeVertexNormals();
+const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95}));
+mesh.position.set(cx*CH,0,cz*CH);surf.add(mesh);chunks.set(key,mesh);}
+function updateChunks(){const cx=Math.round(player.position.x/CH),cz=Math.round(player.position.z/CH);
+for(let dx=-VIEW;dx<=VIEW;dx++)for(let dz=-VIEW;dz<=VIEW;dz++)buildChunk(cx+dx,cz+dz);
+for(const[k,m]of chunks){const a=k.split(',');if(Math.abs(+a[0]-cx)>VIEW+1||Math.abs(+a[1]-cz)>VIEW+1){surf.remove(m);m.geometry.dispose();chunks.delete(k);}}}
+function buildStructures(){const B=BIOMES[curPlanet.biome],s=curPlanet.seed,count=QUAL[QI].bld;
+const pad=new THREE.Mesh(new THREE.CylinderGeometry(6,6.5,.6,24),eMat(0x39424c,0x000000,0));pad.position.y=terrainH(0,0)-.1;surf.add(pad);structures.push(pad);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(5.4,.14,8,40),bMat(curPlanet.home?0xffd25e:curPlanet.sunhen?0xff2244:0x35e0ff));
+ring.rotation.x=Math.PI/2;ring.position.y=terrainH(0,0)+.35;surf.add(ring);structures.push(ring);
+function mk(geo,mat,x,y,z){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);return m;}
+for(let i=0;i<count;i++){const a=hash2(i,7,s)*Math.PI*2,d=45+hash2(i,11,s)*130;
+const x=Math.cos(a)*d,z=Math.sin(a)*d,y=terrainH(x,z);
+const g=new THREE.Group();const h1=hash2(i,3,s);
+if(curPlanet.sunhen){const sp=4+h1*10;g.add(mk(new THREE.ConeGeometry(1.5+h1,sp,5),eMat(0x1a0d0d,0xff2244,.4),0,sp/2,0));structCols.push({x:x,z:z,r:2.5});}
+else if(B.bld==='ruins'){const bh=3+h1*8;g.add(mk(new THREE.BoxGeometry(3+h1*3,bh,3+h1*2),eMat(0x55604f,0x000000,0),0,bh/2,0));structCols.push({x:x,z:z,r:4.5});}
+else if(B.bld==='antenna'){g.add(mk(new THREE.CylinderGeometry(.3,.5,12+h1*8,8),eMat(0x8a7a58,0x000000,0),0,7,0));structCols.push({x:x,z:z,r:2.2});}
+else if(B.bld==='dome'){g.add(mk(new THREE.SphereGeometry(4+h1*3,20,12,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x9fc3dd,transparent:true,opacity:.55,emissive:0x224466,emissiveIntensity:.4}),0,0,0));structCols.push({x:x,z:z,r:4.5+h1*3});}
+else if(B.bld==='spire'){for(let k2=0;k2<3;k2++){const sh=6+hash2(i+k2,9,s)*12;g.add(mk(new THREE.ConeGeometry(1.2+hash2(i,k2,s)*1.4,sh,5),eMat(0x14100e,0xff5a1e,.25),k2*1.8-1.8,sh/2,0));}structCols.push({x:x,z:z,r:3.5});}
+else{g.add(mk(new THREE.BoxGeometry(1.6,10+h1*8,1),eMat(0x181426,0x30e8c8,.5),0,5+h1*4,0));structCols.push({x:x,z:z,r:2.4});}
+g.position.set(x,y,z);g.rotation.y=h1*6;surf.add(g);structures.push(g);}}
+function clearStructures(){structures.forEach(function(m){surf.remove(m);});structures=[];structCols=[];}
+const P={hp:100,maxHp:100,ki:100,maxKi:100,jet:100,credits:0,weapon:6,vel:new THREE.Vector3(),yaw:0,pitch:-.12,onGround:false,shield:0,trans:0,transOn:false,kills:0,threat:0};
+let camMode=1,visorOn=false,dmgImmune=0,winOpen=false,winShown=false,startT=0,_started=false;
+let barTarget=null,barT=0,slowT=0;
+const WPN=[
+{n:'Бластер',cd:.26,dmg:12,spd:130,type:'bolt',sz:.22,col:0x35e0ff,planetDmg:0,starDmg:0},
+{n:'Меч',cd:.5,dmg:34,type:'melee',range:7,planetDmg:0,starDmg:0},
+{n:'Парные',cd:.13,dmg:6,spd:140,type:'bolt',sz:.16,col:0x8aff5e,planetDmg:0,starDmg:0},
+{n:'Лук',cd:.95,dmg:42,spd:90,type:'bolt',sz:.2,col:0xffd25e,grav:true,planetDmg:0,starDmg:0},
+{n:'Молот',cd:1.25,dmg:48,type:'aoe',range:11,planetDmg:0,starDmg:0},
+{n:'Пушка',cd:2.1,dmg:85,spd:70,type:'bolt',sz:.55,col:0xff7a2e,boom:9,planetDmg:8,starDmg:3},
+{n:'РАЗРУШИТЕЛЬ',cd:.45,dmg:420,spd:130,type:'bolt',sz:1,col:0xffd25e,boom:11,planetDmg:140,starDmg:160}];
+const ABIL={Q:{cost:30,cd:6,t:0},X:{cost:20,cd:10,t:0},R:{cost:15,cd:4,t:0},V:{cost:80,cd:14,t:0},T:{cost:25,cd:12,t:0}};
+let mode='menu',paused=false,invOpen=false;
+let fireCd=0,fireHeld=false,dualAlt=0,tutStep=1,shake=0,stormT=0,spawnT=2,evT=18,bhWarn=0,heatWarn=0,bhFate=false;
+const tutDone={move:false,look:false,jet:false,fire:false,land:false};
+const CHATTER=[
+'…ополчение Гелиоса держит оборону у сектора [4,-3]…',
+'…замечен флот Сюнхэн у Прайм-Улья. Их поведение… странное…',
+'…если слышите Тишину — не отвечайте. Просто не отвечайте…',
+'…станция ГЕЛИОС торгует без наценки до конца цикла…',
+'…пропал конвой «Церера». Последний сигнал — помехи…',
+'…охотникам подняли награду за голову Лероя…'];
+function radioChatter(){toast('📻 '+CHATTER[Math.floor(rand(0,CHATTER.length))],'#6f93ad');}
+function runEncounter(){
+if(mode!=='space')return;
+let type;const r=Math.random();
+if(notoriety>=60&&nemesisCd<=0&&r<.25){type='nemesis';}
+else if(notoriety>=30&&r<.35){type='hunting';}
+else if(r<.5){type='patrol';}
+else if(r<.62){type='distress';}
+else if(r<.72){type='aftermath';}
+else if(r<.80){type='convoy';}
+else if(r<.88){type='anomaly';}
+else{type='pirates';}
+spawnEncounter(type);}
+function spawnEncounter(type){
+if(type==='patrol'){
+showBanner('⚠ Патруль Сюнхэн','#ff9a3c');
+for(let i=0;i<2+Math.floor(rand(0,2));i++){const cls=pickShip();
+const a=rand(0,Math.PI*2);const pos=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*220,rand(-30,30),Math.sin(a)*220)));
+enemies.push(mkShip(cls,pos));}
+}else if(type==='hunting'){
+showBanner('🎯 ОХОТНИЧЬЙ ОТРЯД СЮНХЭН вышел на ваш след!','#ff5566');
+const pool=SHIPS.filter(function(s){return s.t>=4&&s.t<=7&&s.k===2;});
+for(let i=0;i<3;i++){const c=pool[Math.floor(rand(0,pool.length))];
+const a=rand(0,Math.PI*2);const pos=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*260,rand(-30,30),Math.sin(a)*260)));
+const e=mkShip(c,pos);e.aggro=true;e.ind.visible=true;enemies.push(e);}
+}else if(type==='nemesis'){spawnNemesis();
+}else if(type==='distress'){showBanner('🆘 Сигнал бедствия: кто-то просит помощи','#8fd8ff');spawnPickup('beacon');
+}else if(type==='aftermath'){
+showBanner('💥 Поле недавнего боя: обломки и мародёры','#ff9a3c');
+for(let i=0;i<4;i++){const a=rand(0,Math.PI*2),d=rand(80,200);
+const pos=player.position.clone().add(new THREE.Vector3(Math.cos(a)*d,rand(-30,30),Math.sin(a)*d));
+const m=makeWreckMesh(false);m.position.copy(pos);m.rotation.set(rand(0,3),rand(0,3),rand(0,3));space.add(m);
+pickups.push({kind:'wreck',m:m,working:false,shipId:'iskra'});}
+const c=SHIPS[Math.floor(rand(0,5))];
+const ca=rand(0,Math.PI*2);const cpos=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(ca)*180,0,Math.sin(ca)*180)));
+const e=mkShip(c,cpos);e.aggro=true;e.ind.visible=true;enemies.push(e);
+}else if(type==='convoy'){showBanner('🚚 Конвой торговцев','#7fff9a');for(let i=0;i<3;i++){spawnPickup('cargo');}
+}else if(type==='anomaly'){showBanner('🌀 Аномальный сигнал УТ…','#b060ff');spawnDerelict();
+}else if(type==='pirates'){
+showBanner('🏴 Пиратская засада!','#ff5566');
+for(let i=0;i<3;i++){const cls=SHIPS[Math.floor(rand(0,7))];
+const a=rand(0,Math.PI*2);const pos=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*150,rand(-20,20),Math.sin(a)*150)));
+const e=mkShip(cls,pos);e.aggro=true;e.ind.visible=true;enemies.push(e);}
+}}
+function spawnNemesis(){
+const cls=SHIPS.find(function(s){return s.n==='Гаситель Сумрак';})||SHIPS[26];
+const a=rand(0,Math.PI*2);
+const pos=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*320,rand(-40,40),Math.sin(a)*320)));
+const e=mkShip(cls,pos);
+e.hp=e.maxHp=Math.round(e.maxHp*2.5);
+e.nemesis=true;e.aggro=true;e.ind.visible=true;
+enemies.push(e);
+nemesisCd=180;
+addCodex('nemesis');
+showBanner('⚠ НЕМЕЗИДА: ПАЛАЧ МОРРОУ вышел на охоту!','#ff2244');}
+function startWar(){warActive=true;warT=rand(60,90);$('warTimer').style.display='block';
+showBanner('⚔ МЕЖГАЛАКТИЧЕСКАЯ ВОЙНА! Укройтесь на планете или выживите!','#ff2244');}
+function endWar(){warActive=false;$('warTimer').style.display='none';
+showBanner('🕊 Война окончена. Поле боя усеяно обломками.','#7fff9a');
+if(mode==='space')spawnWarWrecks();else pendingWrecks=true;
+nextWarT=rand(150,300);}
+function addFx(mesh,life,upd){if(fx.length>45)return;activeScene.add(mesh);fx.push({m:mesh,life:life,t:0,upd:upd});}
+function sparkBurst(pos,col){for(let i=0;i<6;i++){
+const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:col,blending:THREE.AdditiveBlending,transparent:true,opacity:.9,depthWrite:false}));
+sp.scale.set(rand(.6,1.4),rand(.6,1.4),1);sp.position.copy(pos);
+sp.userData.vel=new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize().multiplyScalar(rand(6,16));
+addFx(sp,.4,function(k){sp.position.add(sp.userData.vel.clone().multiplyScalar(.016));sp.material.opacity=.9*(1-k);});}}
+function explosion(pos,rad,dmg,friendly){const s=new THREE.Mesh(sGeo(1),new THREE.MeshBasicMaterial({color:0xffa040,transparent:true,opacity:.9,blending:THREE.AdditiveBlending}));
+s.position.copy(pos);addFx(s,.5,function(k){s.scale.setScalar(1+k*rad);s.material.opacity=.9*(1-k);});
+const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffb060,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true,opacity:.95}));
+fl.position.copy(pos);fl.scale.set(rad*3,rad*3,1);addFx(fl,.35,function(k){fl.material.opacity=.95*(1-k);});
+sfx('boom');shake=Math.min(.6,shake+.25);
+bloomBoost=Math.max(bloomBoost,.3+rad*.03);
+if(rad>5)chromBoost=Math.max(chromBoost,.2);
+if(friendly)enemies.forEach(function(e){if(!e.dead&&e.g.position.distanceTo(pos)<rad)hitEnemy(e,dmg);});
+else if(player.position.distanceTo(pos)<rad)damagePlayer(dmg*.6);}
+function lightning(pos){const pts=[];for(let i=0;i<=8;i++)pts.push(pos.clone().add(new THREE.Vector3(rand(-2,2),rand(-1,1)*i*.3,rand(-2,2)).multiplyScalar(i*.4)));
+const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x8aefff,transparent:true,opacity:1}));
+addFx(ln,.22,function(k){ln.material.opacity=1-k;});}
+let lastPITxt='',lastPrompt='',lastWpn=-1,lastLaunchVis=null,lastMissTxt='';
+function flashDmg(){$('dmg').style.opacity=1;setTimeout(function(){$('dmg').style.opacity=0;},120);}
+function setTut(){$('tutN').textContent=tutStep;$('tutT').textContent=['Движение: WASD','Осмотритесь: мышь','Джетпак: SPACE','Выстрелите: ЛКМ','Сядьте на планету: F'][tutStep-1];}
+function updateHUD(){
+$('hpF').style.width=(P.hp/P.maxHp*100)+'%';$('hpT').textContent=Math.ceil(P.hp)+'/'+P.maxHp;
+$('kiF').style.width=(P.ki/P.maxKi*100)+'%';$('kiT').textContent=Math.ceil(P.ki)+'/'+P.maxKi;
+$('jpF').style.width=P.jet+'%';$('jpT').textContent=Math.ceil(P.jet)+'/100';
+const sd=mode==='space'&&activeShip?pshipById(activeShip):null;
+if(sd){$('hullRow').style.display='block';$('huT').textContent=Math.round(hulls[activeShip])+'/'+sd.hull;$('huF').style.width=clamp(hulls[activeShip]/sd.hull*100,0,100)+'%';}
+else $('hullRow').style.display='none';
+$('crT').textContent=P.credits;
+$('eqT').textContent=WPN[P.weapon].n+' / '+(activeShip?pshipById(activeShip).n:'Скафандр');
+if(lastWpn!==P.weapon){lastWpn=P.weapon;for(let i=1;i<=7;i++)$('w'+i).classList.toggle('on',i-1===P.weapon);}
+for(const k in ABIL){const a=ABIL[k],el=$('ab'+k).querySelector('.cd');
+if(a.t>0){el.style.opacity=1;el.textContent=a.t.toFixed(1);}else if(el.style.opacity!=='0')el.style.opacity=0;}
+let txt;
+if(mode==='surface'){const B=BIOMES[curPlanet.biome];
+txt='<b>🪐 '+curPlanet.name+'</b><br>Биом: '+B.name+'<br>Гравитация: '+(B.grav/20).toFixed(1)+'g';}
+else{const np=nearestPlanet();const sx=Math.floor(player.position.x/SECT),sz=Math.floor(player.position.z/SECT);
+txt=np?'<b>🪐 '+np.p.name+'</b><br>Биом: '+BIOMES[np.p.biome].name+'<br>Дистанция: '+Math.round(np.d)+' м<br><small style="color:#7fa2bd">Сектор ['+sx+', '+sz+']</small>':'<b>🪐 Глубокий космос</b><br>Сектор ['+sx+', '+sz+']';}
+if(txt!==lastPITxt){lastPITxt=txt;$('planetInfo').innerHTML=txt;}
+const lv=mode==='surface';
+if(lv!==lastLaunchVis){lastLaunchVis=lv;$('launchBtn').style.display=lv?'block':'none';}
+homePos(homeTmp,clock.elapsedTime);
+const hd=Math.round(player.position.distanceTo(homeTmp));
+let mt;
+if(storyAct===1)mt='🎯 АКТ I: доберитесь до Гелиос-Прайм • '+hd+' м';
+else mt='🎯 АКТ II: расследуйте правду о бунте • СЮНХЭН [-3,2]';
+if(mt!==lastMissTxt){lastMissTxt=mt;$('mission').textContent=mt;}
+if(barT>0&&barTarget&&!barTarget.dead){
+$('pbar').style.display='block';$('pbN').textContent=barTarget.name.toUpperCase();
+$('pbT').textContent=Math.max(0,Math.ceil(barTarget.hp))+'/'+barTarget.maxHp;
+$('pbF').style.width=clamp(barTarget.hp/barTarget.maxHp*100,0,100)+'%';}
+else $('pbar').style.display='none';
+if(grave){
+const right=(grave.mode==='space'&&mode==='space')||(grave.mode==='surface'&&mode==='surface');
+if(right){const d=Math.round(player.position.distanceTo(grave.pos));
+$('beaconInfo').textContent='📍 МАЯК ГРУЗА: '+d+' м'+(d<20?' — нажмите F!':'');}
+else{$('beaconInfo').textContent='📍 Груз '+(grave.mode==='surface'?'на поверхности: '+grave.planetName:'дрейфует в космосе');}}
+$('lowhp').classList.toggle('on',P.hp<P.maxHp*.25&&mode!=='dead');
+$('perf').textContent='FPS '+fps+' • '+QUAL[QI].n+' • РОЗЫСК '+notoriety+' • УГРОЗА '+P.threat;}
+function toggleVisor(){visorOn=!visorOn;$('cv').classList.toggle('visorOn',visorOn);$('visorOv').style.opacity=visorOn?1:0;$('visorBtn').classList.toggle('on',visorOn);sfx('ui');}
+function toggleCam(){
+if(paused||invOpen||stOpen||mode==='dead'||mode==='menu')return;
+camMode=1-camMode;
+$('camBtn').textContent=camMode===0?'🎥 ВИД: 1-е лицо [V]':'🎥 ВИД: 3-е лицо [V]';
+showBanner(camMode===0?'👁 Вид от 1-го лица':'🎥 Вид от 3-го лица','#8fd8ff');
+sfx('ui');}
+function launchFromPlanet(){if(mode==='surface'&&!paused&&!invOpen){sfx('dash');exitToSpace();}}
+function nudgeFromHazards(){for(let it=0;it<3;it++){
+stars.forEach(function(s){if(s.dead)return;const v=player.position.clone().sub(s.pos);const d=v.length();if(d>0.01&&d<s.r*1.8)player.position.copy(s.pos).add(v.normalize().multiplyScalar(s.r*2.2));});
+bhs.forEach(function(b){const v=player.position.clone().sub(b.pos);const d=v.length();if(d>0.01&&d<b.r*8)player.position.copy(b.pos).add(v.normalize().multiplyScalar(b.r*9));});
+activePlanets.forEach(function(p){if(p.dead)return;const v=player.position.clone().sub(p.pos);const d=v.length();if(d>0.01&&d<p.r+4)player.position.copy(p.pos).add(v.normalize().multiplyScalar(p.r+5));});}}
+function nearestPlanet(){let best=null,bd=1e9;activePlanets.forEach(function(p){if(p.dead)return;const d=player.position.distanceTo(p.pos)-p.r;if(d<bd){bd=d;best={p:p,d:d};}});return best&&best.d<250?best:null;}
+function transition(mid){$('plasma').style.opacity=1;$('fade').style.opacity=1;sfx('boom');shake=.5;setTimeout(function(){mid();setTimeout(function(){$('plasma').style.opacity=0;$('fade').style.opacity=0;},250);},480);}
+function clearEntities(fromSpace){
+enemies.forEach(function(e){fromSpace?space.remove(e.g):surf.remove(e.g);});
+crystals.forEach(function(c){surf.remove(c.g);});
+enemies=[];crystals=[];pBullets=[];eBullets=[];fx=[];}
+function enterPlanet(p){transition(function(){
+clearEntities(true);
+pickups.forEach(function(pk){if(pk.kind!=='derelict'&&pk.kind!=='wreck')space.remove(pk.m);});
+pickups=pickups.filter(function(pk){return pk.kind==='derelict'||pk.kind==='wreck';});
+meteors.forEach(function(mt){space.remove(mt.m);});meteors=[];
+anchorPos.copy(player.position);
+curPlanet=p;activeScene=surf;
+chunks.forEach(function(m){surf.remove(m);m.geometry.dispose();});chunks.clear();
+const B=BIOMES[p.biome];
+surf.background=new THREE.Color(B.sky);
+const fogFar=Math.max(200,VIEW*CH-10);surf.fog=new THREE.Fog(B.fog,40,fogFar);
+hemi.color.set(B.sky);hemi.groundColor.set(B.low);dSun.color.set(B.sun);
+renderer.toneMappingExposure=.8;bloomPass.strength=.45;
+if(surfDust)surf.remove(surfDust);
+const n=QUAL[QI].part,pos=new Float32Array(n*3);
+for(let i=0;i<n;i++){pos[i*3]=rand(-80,80);pos[i*3+1]=rand(0,50);pos[i*3+2]=rand(-80,80);}
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+surfDust=new THREE.Points(g,new THREE.PointsMaterial({color:B.part,size:.35,transparent:true,opacity:.55}));surf.add(surfDust);
+player.position.set(0,terrainH(0,0)+2,0);P.vel.set(0,0,0);P.yaw=0;P.pitch=-.1;
+surf.add(player);surf.add(camera);
+buildStructures();updateChunks();
+for(let i=0;i<14;i++){const a=rand(0,Math.PI*2),d=rand(25,150),x=Math.cos(a)*d,z=Math.sin(a)*d;mkCrystal(new THREE.Vector3(x,terrainH(x,z),z));}
+if(grave&&grave.mode==='surface'&&grave.planetName===p.name){
+if(graveBeaconSurf)surf.remove(graveBeaconSurf);
+graveBeaconSurf=buildBeaconMesh();graveBeaconSurf.position.copy(grave.pos);surf.add(graveBeaconSurf);applyBeaconVisibility();}
+mode='surface';
+if(!tutDone.land){tutDone.land=true;tutStep=5;setTut();}
+if(p.sunhen)addCodex('sunhen');
+if(p.home&&!winShown){winShown=true;winOpen=true;storyAct=2;addCodex('helios');document.exitPointerLock();
+const mm=Math.floor((clock.elapsedTime-startT)/60),ss=Math.floor((clock.elapsedTime-startT)%60);
+$('winStats').innerHTML='ВРЕМЯ ПУТИ: '+mm+' мин '+ss+' сек<br>УНИЧТОЖЕНО: '+P.kills+' • КРЕДИТОВ: '+P.credits;
+$('winS').style.display='flex';saveGame();}});}
+function closeWin(){winOpen=false;$('winS').style.display='none';lockPointer();}
+function leaveSurface(){
+clearEntities(false);if(surfDust)surf.remove(surfDust);
+chunks.forEach(function(m){surf.remove(m);m.geometry.dispose();});chunks.clear();clearStructures();
+activeScene=space;space.add(player);space.add(camera);
+const np=curPlanet;
+if(np&&np.mesh.parent)player.position.copy(np.pos).add(new THREE.Vector3(0,np.r*.4,np.r+90));
+else player.position.copy(anchorPos);
+P.vel.set(0,0,0);mode='space';curPlanet=null;
+renderer.toneMappingExposure=1.0;bloomPass.strength=.85;
+if(pendingWrecks){spawnWarWrecks();pendingWrecks=false;}
+if(warActive)toast('⚔ Вы покинули укрытие — война всё ещё идёт!','#ff7585');}
+function exitToSpace(){transition(leaveSurface);}
+function forceToSpaceStart(){
+if(curPlanet){clearEntities(false);
+if(surfDust)surf.remove(surfDust);
+chunks.forEach(function(m){surf.remove(m);m.geometry.dispose();});chunks.clear();clearStructures();
+curPlanet=null;}
+activeScene=space;space.add(player);space.add(camera);
+renderer.toneMappingExposure=1.0;bloomPass.strength=.85;}
+function dmgMul(){return(1+inv.dmgMod*.15)*(P.transOn?1.6:1);}
+function hitEnemy(e,d){if(e.dead)return;e.hp-=d;e.flash=1;sfx('hit');
+crossHitT=.12;$('cross').classList.add('hitmark');
+sparkBurst(e.g.position,0xffaa66);
+if(!e.aggro&&Math.random()<e.hitA)aggroEnemy(e);
+if(e.hp<=0)killEnemy(e);}
+function killEnemy(e){if(e.dead)return;e.dead=true;
+explosion(e.g.position,e.cls?clamp(e.cls.len*.4,3,10):4,0,true);activeScene.remove(e.g);
+enemies=enemies.filter(function(x){return x!==e;});
+P.kills++;if(P.kills%5===0)P.threat++;
+const tier=e.cls?e.cls.t:1;
+P.credits+=Math.floor(rand(8,20)*tier);
+if(e.cls){notoriety=Math.min(100,notoriety+e.cls.t);}
+if(Math.random()<.6)invAdd('plating',1+Math.floor(tier/3));
+if(Math.random()<.3+tier*.02)invAdd('engineP',1);
+if(tier>=5&&Math.random()<.25)invAdd('reactor',1);
+if(tier>=7&&Math.random()<.2)invAdd('navmod',1);
+if(e.nemesis){showBanner('💀 Палач Морроу повержен!','#ffd25e');dropLegendaryPart();P.credits+=1000;nemesisCd=180;}
+else if(e.cls&&e.cls.k===3){invAdd('core',3);for(let i=0;i<10;i++)invAdd('crystal',1);
+if(Math.random()<.15)dropLegendaryPart();
+showBanner('🌟 ГАСИТЕЛЬ ЗВЁЗД УНИЧТОЖЕН!','#ffd25e');}
+if(barTarget===e){barTarget=null;barT=0;}
+saveGame();}
+function damagePlayer(d){
+if(mode==='dead')return;
+if(P.shield>0){sfx('zap');return;}
+if(dmgImmune>0)return;
+lastDmgT=clock.elapsedTime;
+glitchT=.3;$('cv').classList.add('glitch');
+const sd=mode==='space'&&activeShip?pshipById(activeShip):null;
+if(sd&&hulls[activeShip]>0){
+hulls[activeShip]-=d;
+if(hulls[activeShip]<0){const over=-hulls[activeShip];hulls[activeShip]=0;P.hp-=over;}
+flashDmg();shake=Math.min(.7,shake+.2);sfx('hit');
+bloomBoost=Math.max(bloomBoost,.4);chromBoost=Math.max(chromBoost,.3);
+if(P.hp<=0){P.hp=0;die();}return;}
+P.hp-=d;flashDmg();shake=Math.min(.7,shake+.2);sfx('hit');
+bloomBoost=Math.max(bloomBoost,.4);chromBoost=Math.max(chromBoost,.3);
+if(P.hp<=0){P.hp=0;die();}}
+function die(msg){
+if(mode==='dead')return;
+dropGrave();
+clearItems();P.credits=0;
+mode='dead';document.exitPointerLock();
+$('deathSub').textContent=(msg||'…')+'<br><br>📍 Груз и кредиты остались на месте гибели — ищите оранжевый маяк.';
+$('deathS').style.display='flex';}
+function respawn(){
+$('deathS').style.display='none';
+P.hp=P.maxHp;P.ki=P.maxKi;P.jet=100;dmgImmune=2.5;
+enemies.forEach(function(e){activeScene.remove(e.g);});enemies=[];pBullets=[];eBullets=[];
+if(mode==='surface'||curPlanet)forceToSpaceStart();
+else{activeScene=space;space.add(player);space.add(camera);}
+player.position.set(0,50,420);P.vel.set(0,0,0);
+activeShip=null;lastRenderedShip=null;
+mode='space';
+nudgeFromHazards();
+lockPointer();
+showBanner('🔄 Возрождение у точки старта. Груз — у маяка.','#8fd8ff');
+updateBeaconHUD();}
+function camDir(){return new THREE.Vector3(-Math.sin(P.yaw)*Math.cos(P.pitch),Math.sin(P.pitch),-Math.cos(P.yaw)*Math.cos(P.pitch));}
+function bulletHitsWorld(b){
+if(mode!=='space')return false;
+for(const p of activePlanets){if(p.dead)continue;
+if(b.m.position.distanceToSquared(p.pos)<p.r*p.r){
+if(b.planetDmg&&!p.home){p.hp-=b.planetDmg;barTarget=p;barT=5;explosion(b.m.position,3,0,false);sparkBurst(b.m.position,0xaee6ff);
+if(p.hp<=0)destroyByPlayer(p);}
+return true;}}
+for(const s of stars){if(s.dead)continue;
+if(b.m.position.distanceToSquared(s.pos)<s.r*s.r){
+if(b.starDmg){s.hp-=b.starDmg;barTarget=s;barT=5;explosion(b.m.position,4,0,false);sparkBurst(b.m.position,0xffd25e);
+if(s.hp<=0)destroyStar(s);}
+return true;}}
+return false;}
+function shoot(){const w=WPN[P.weapon];if(fireCd>0)return;fireCd=w.cd;vmKick=1;vmFlashT=.07;
+if(!tutDone.fire){tutDone.fire=true;if(tutStep<4)tutStep=4;setTut();}
+const dir=camDir();
+const origin=camMode===0?camera.position.clone().add(dir.clone().multiplyScalar(.9)):player.position.clone().add(new THREE.Vector3(0,1.2,0)).add(dir.clone().multiplyScalar(1.2));
+if(w.type==='bolt'){if(pBullets.length>70)return;
+const off=w===WPN[2]?(dualAlt++%2?-.5:.5):0;
+const side=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
+const o=origin.clone().add(side.multiplyScalar(off));
+const m=new THREE.Mesh(sGeo(w.sz),bMat(w.col));m.position.copy(o);activeScene.add(m);
+pBullets.push({m:m,vel:dir.clone().multiplyScalar(w.spd).add(P.vel.clone().multiplyScalar(.3)),dmg:w.dmg*dmgMul(),life:2.2,grav:w.grav||false,boom:w.boom||0,planetDmg:w.planetDmg||0,starDmg:w.starDmg||0,prevPos:o.clone(),col:w.col});
+sfx('shoot');}
+else if(w.type==='melee'){sfx('hit');
+enemies.forEach(function(e){if(e.dead)return;const to=e.g.position.clone().sub(player.position);
+if(to.length()<w.range&&to.clone().normalize().dot(dir)>.3)hitEnemy(e,w.dmg*dmgMul());});}
+else if(w.type==='aoe'){sfx('boom');shake=.35;
+enemies.forEach(function(e){if(!e.dead&&e.g.position.distanceTo(player.position)<w.range)hitEnemy(e,w.dmg*dmgMul());});}}
+function useAbil(k){const a=ABIL[k];if(a.t>0||P.ki<a.cost||mode==='dead'||paused||invOpen)return;
+P.ki-=a.cost;a.t=a.cd;
+if(k==='Q'){sfx('zap');
+enemies.slice().sort(function(x,y){return x.g.position.distanceTo(player.position)-y.g.position.distanceTo(player.position);}).slice(0,3).forEach(function(e){
+if(!e.dead&&e.g.position.distanceTo(player.position)<40){lightning(e.g.position);hitEnemy(e,45*dmgMul());}});}
+if(k==='X'){P.shield=5;sfx('ui');}
+if(k==='R'){sfx('dash');P.vel.add(camDir().multiplyScalar(42));}
+if(k==='V'){explosion(player.position.clone().add(camDir().multiplyScalar(8)),14,70*dmgMul(),true);bloomBoost=Math.max(bloomBoost,1);}
+if(k==='T'){P.transOn=!P.transOn;P.trans=P.transOn?10:0;suitMat.emissive.set(P.transOn?0x35e0ff:0x000000);suitMat.emissiveIntensity=P.transOn?.8:0;aura.intensity=P.transOn?3:0;sfx('ui');}}
+function fireShipBullet(e){const cls=e.cls;
+const dir=player.position.clone().add(new THREE.Vector3(0,1,0)).sub(e.g.position).normalize();
+const m=new THREE.Mesh(sGeo(clamp(cls.len*.1,.25,.8)),bMat(cls.col));m.position.copy(e.g.position);activeScene.add(m);
+eBullets.push({m:m,vel:dir.multiplyScalar(60+cls.t*4),life:4,dmg:cls.dmg,prevPos:e.g.position.clone(),col:cls.col});sfx('shoot');}
+function extinguisherAI(e,dt){const cls=e.cls;
+let target=null,isStar=false,bd=1e9;
+activePlanets.forEach(function(p){if(p.dead||p.home)return;const d=e.g.position.distanceTo(p.pos);if(d<bd){bd=d;target=p;isStar=false;}});
+stars.forEach(function(s){if(s.dead)return;const d=e.g.position.distanceTo(s.pos);if(d<bd){bd=d;target=s;isStar=true;}});
+if(!target)return;
+const tp=target.pos;const toT=tp.clone().sub(e.g.position);const d=toT.length();
+e.g.lookAt(tp);
+if(d>220)e.g.position.add(toT.normalize().multiplyScalar(e.spd*dt));
+e.fireT-=dt;
+if(e.fireT<=0&&d<700){e.fireT=cls.fr;
+const m=new THREE.Mesh(sGeo(2.5),bMat(cls.col));m.position.copy(e.g.position);activeScene.add(m);
+const dir=tp.clone().sub(e.g.position).normalize();
+capitalShots.push({m:m,target:target,isStar:isStar,dmg:cls.dmg*5,vel:dir.multiplyScalar(90),life:8,radius:target.r+5});
+sfx('boom');shake=Math.max(shake,.3);}}
+function shipBehavior(e,dt,d,toP){const cls=e.cls;
+e.g.lookAt(player.position);
+if(cls.k===3){extinguisherAI(e,dt);return;}
+if(d>cls.len*3+25)e.g.position.add(toP.clone().normalize().multiplyScalar(e.spd*dt));
+else if(d<cls.len*2)e.g.position.add(toP.clone().normalize().negate().multiplyScalar(e.spd*dt));
+e.fireT-=dt;
+if(e.fireT<=0&&d<220+cls.t*20&&eBullets.length<40){e.fireT=cls.fr;fireShipBullet(e);}}
+const keys={};
+/* ===== КЛАВИАТУРА: смена вида ТОЛЬКО на V ===== */
+addEventListener('keydown',function(e){
+keys[e.code]=true;
+if(mode==='menu'||mode==='dead')return;
+if(e.code==='Escape'){if(invOpen)toggleInv();else if(stOpen)closeStation();return;}
+if(e.code==='KeyI')toggleInv();
+if(e.code==='F9'){e.preventDefault();setQuality((QI+1)%3);return;}
+if(invOpen||paused||stOpen)return;
+/* === СМЕНА ВИДА: ТОЛЬКО V, НИКАКИХ ДРУГИХ КЛАВИШ === */
+if(e.code==='KeyV'){toggleCam();return;}
+if(e.code==='KeyG')toggleVisor();
+if(e.code==='KeyB')launchFromPlanet();
+if(e.code==='KeyF')interact();
+if(['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6'].indexOf(e.code)>=0){P.weapon=+e.code[5]-1;sfx('ui');}
+if(e.code==='Digit7'){P.weapon=6;sfx('ui');}
+if(e.code==='KeyQ')useAbil('Q');if(e.code==='KeyX')useAbil('X');
+if(e.code==='KeyR')useAbil('R');if(e.code==='KeyZ')useAbil('V');if(e.code==='KeyT')useAbil('T');});
+addEventListener('keyup',function(e){keys[e.code]=false;});
+addEventListener('mousedown',function(e){if(e.button===0&&mode!=='menu'&&!paused&&!invOpen&&!winOpen&&!stOpen){fireHeld=true;if(document.pointerLockElement!==renderer.domElement)lockPointer();}});
+addEventListener('mouseup',function(e){if(e.button===0)fireHeld=false;});
+addEventListener('mousemove',function(e){
+if(document.pointerLockElement!==renderer.domElement||paused||invOpen)return;
+P.yaw-=e.movementX*.0022;P.pitch=clamp(P.pitch-e.movementY*.0022,-1.35,1.35);
+if(!tutDone.look){tutDone.look=true;if(tutStep<3)tutStep=2;setTut();}});
+function lockPointer(){renderer.domElement.requestPointerLock();}
+document.addEventListener('pointerlockchange',function(){
+if(document.pointerLockElement===null&&mode!=='menu'&&mode!=='dead'&&!invOpen&&!winOpen&&!cutOn&&!stOpen){paused=true;$('pauseS').style.display='flex';}});
+addEventListener('keydown',function(e){if(e.code==='Escape'&&paused){paused=false;$('pauseS').style.display='none';lockPointer();}});
+function toggleInv(){invOpen=!invOpen;$('invS').style.display=invOpen?'flex':'none';
+if(invOpen){document.exitPointerLock();selItem=null;updateInvUI();}else lockPointer();}
+function interact(){
+if(tryRecoverGrave())return;
+if(mode==='surface'&&Math.hypot(player.position.x,player.position.z)<9){launchFromPlanet();return;}
+if(mode==='space'){for(const st of stations){if(st.pos.distanceTo(player.position)<50){openStation(st);return;}}}
+const mag=inv.mods.magnet;
+for(const pk of pickups){if(pk.m.position.distanceTo(player.position)<18){
+if(pk.kind==='wreck'){handleWreck(pk);return;}
+if(pk.kind==='derelict'){handleDerelict(pk);return;}
+if(pk.kind==='cargo'){P.credits+=Math.floor(rand(30,80));invAdd('crystal',1);invAdd('scrap',1);sfx('pickup');space.remove(pk.m);pickups=pickups.filter(function(x){return x!==pk;});return;}
+if(pk.kind==='artifact'){const r2=Math.random();
+if(r2<.34){P.maxHp+=10;P.hp=P.maxHp;showBanner('✨ Артефакт: +10 макс HP','#8aefff');}
+else if(r2<.67){inv.dmgMod++;showBanner('✨ Артефакт: урон +15%','#8aefff');}
+else{P.ki=P.maxKi;P.jet=100;showBanner('✨ Артефакт: полная Ки','#8aefff');}
+sfx('pickup');space.remove(pk.m);pickups=pickups.filter(function(x){return x!==pk;});return;}
+if(pk.kind==='beacon'){P.credits+=150;invAdd('crystal',3);showBanner('🆘 Маяк: +150 кредитов','#ff8899');space.remove(pk.m);pickups=pickups.filter(function(x){return x!==pk;});return;}
+}}
+for(const c of crystals){if(!c.taken&&c.g.position.distanceTo(player.position)<7+mag*4){
+c.taken=true;surf.remove(c.g);invAdd('crystal',1);P.credits+=5;sfx('pickup');return;}}
+if(mode==='space'){const np=nearestPlanet();if(np&&np.d<np.p.r*.6+80){enterPlanet(np.p);return;}}
+sfx('ui');}
+const clock=new THREE.Clock();
+let shieldMesh=null,uiT=0;
+const tmpV=new THREE.Vector3();
+function update(dt){
+if(mode==='dead')return;
+/* === NaN-GUARD: защита от зависания === */
+if(!isFinite(player.position.x)||!isFinite(player.position.y)||!isFinite(player.position.z)){
+player.position.set(0,50,420);P.vel.set(0,0,0);}
+if(P.vel.length()>350)P.vel.setLength(350);
+fireCd=Math.max(0,fireCd-dt);shake=Math.max(0,shake-dt*1.6);vmKick=Math.max(0,vmKick-dt*7);
+dmgImmune=Math.max(0,dmgImmune-dt);barT=Math.max(0,barT-dt);
+if(crossHitT>0){crossHitT-=dt;if(crossHitT<=0)$('cross').classList.remove('hitmark');}
+if(glitchT>0){glitchT-=dt;if(glitchT<=0)$('cv').classList.remove('glitch');}
+if(vmFlashT>0){vmFlashT-=dt;vmFlash.visible=true;vmFlash.scale.setScalar(rand(.5,1));}else vmFlash.visible=false;
+for(const k in ABIL)ABIL[k].t=Math.max(0,ABIL[k].t-dt);
+if(P.shield>0)P.shield-=dt;
+if(P.trans>0){P.trans-=dt;if(P.trans<=0){P.transOn=false;suitMat.emissiveIntensity=0;aura.intensity=0;}}
+if(P.onGround)P.jet=Math.min(100,P.jet+40*dt);else P.jet=Math.min(100,P.jet+7*dt);
+P.ki=Math.min(P.maxKi,P.ki+((stormT>0?14:0)+(P.transOn?-2:4)+inv.mods.regen*3)*dt);
+if(clock.elapsedTime-lastDmgT>6&&P.hp<P.maxHp*.6)P.hp=Math.min(P.maxHp*.6,P.hp+3*dt);
+if(stormT>0){stormT-=dt;$('storm').style.opacity=(.22+Math.sin(clock.elapsedTime*3)*.1).toFixed(2);
+if(stormT<=0){$('storm').style.opacity=0;showBanner('🌩 Шторм утих','#b08aff');}}
+const sd=mode==='space'&&activeShip?pshipById(activeShip):null;
+if(sd&&hulls[activeShip]<sd.hull)hulls[activeShip]=Math.min(sd.hull,hulls[activeShip]+4*dt);
+const boost=(keys['ShiftLeft']||keys['ShiftRight'])?(mode==='space'?2.1:1.55)*(sd?sd.boost:1):1;
+const spd=(mode==='space'?26:12)*boost*(P.transOn?1.35:1)*(1+inv.mods.speed*.08)*(sd?sd.speed:1);
+const fwd=new THREE.Vector3(-Math.sin(P.yaw),0,-Math.cos(P.yaw));
+const right=new THREE.Vector3(Math.cos(P.yaw),0,-Math.sin(P.yaw));
+const wish=new THREE.Vector3();
+if(keys['KeyW']){wish.add(fwd);if(!tutDone.move){tutDone.move=true;if(tutStep<2)tutStep=2;setTut();}}
+if(keys['KeyS'])wish.sub(fwd);
+if(keys['KeyD'])wish.add(right);
+if(keys['KeyA'])wish.sub(right);
+if(wish.lengthSq()>0)wish.normalize().multiplyScalar(spd);
+if(mode==='space'){if(keys['Space'])wish.y+=spd*.85;if(keys['KeyC'])wish.y-=spd*.85;}
+P.vel.lerp(wish,1-Math.pow(.0015,dt));
+let thrust=false;
+if(mode==='surface'){
+const g=BIOMES[curPlanet.biome].grav;P.vel.y-=g*dt;
+if(keys['Space']&&P.jet>0){P.vel.y+=g*dt+30*dt;P.jet=Math.max(0,P.jet-34*dt);thrust=true;
+if(!tutDone.jet){tutDone.jet=true;if(tutStep<4)tutStep=3;setTut();}}
+if(keys['KeyC'])P.vel.y-=20*dt;}
+const pud=player.userData;
+pud.flameL.visible=pud.flameR.visible=thrust&&camMode===1&&!sd;
+if(thrust){const fs=rand(.7,1.4);pud.flameL.scale.set(fs,fs,fs);pud.flameR.scale.set(fs,fs,fs);}
+const moving=wish.lengthSq()>0;
+const swing=(moving&&P.onGround)?Math.sin(bobT*10)*.7:((mode==='space'&&moving)?Math.sin(bobT*6)*.3:0);
+pud.armL.rotation.x+=(swing-pud.armL.rotation.x)*.2;
+pud.armR.rotation.x+=(-swing-pud.armR.rotation.x)*.2;
+pud.legL.rotation.x+=(-swing-pud.legL.rotation.x)*.2;
+pud.legR.rotation.x+=(swing-pud.legR.rotation.x)*.2;
+pud.antTip.scale.setScalar(1+.5*Math.abs(Math.sin(clock.elapsedTime*4)));
+const lp=1+.3*Math.abs(Math.sin(clock.elapsedTime*3));
+pud.lampL.scale.setScalar(lp);pud.lampR.scale.setScalar(lp);
+player.position.add(P.vel.clone().multiplyScalar(dt));
+P.onGround=false;
+if(thrust&&mode!=='dead'){
+const baseY=mode==='surface'?terrainH(player.position.x,player.position.z)+.5:.8;
+for(let i=0;i<2;i++){
+const offX=(i===0?-.15:.15);
+const off=new THREE.Vector3(offX,.5,-.4);
+off.applyEuler(new THREE.Euler(0,P.yaw+Math.PI,0));
+const jPos=player.position.clone().add(off);
+jPos.y=baseY+.35;
+spawnJet(jPos,P.vel);}}
+if(mode==='surface'){
+const h=terrainH(player.position.x,player.position.z);
+if(player.position.y<h+.1){player.position.y=h+.1;P.vel.y=Math.max(0,P.vel.y);P.onGround=true;}
+for(const s of structCols){const dx=player.position.x-s.x,dz=player.position.z-s.z,d=Math.hypot(dx,dz);
+if(d<s.r+.7&&d>0.01){const push=(s.r+.7-d);player.position.x+=dx/d*push;player.position.z+=dz/d*push;}}
+if(player.position.y>170){exitToSpace();return;}
+if(surfDust)surfDust.position.set(player.position.x,player.position.y+10,player.position.z);
+updateChunks();sunAngle+=dt*.008;dSun.position.set(Math.cos(sunAngle)*200,Math.sin(sunAngle)*200+40,80);
+if(graveBeaconSurf&&graveBeaconSurf.visible)graveBeaconSurf.userData.orb.scale.setScalar(1+.3*Math.sin(clock.elapsedTime*4));
+}else{
+activePlanets.forEach(function(p){
+if(mode==='surface'&&curPlanet&&p.sysKey===curPlanet.sysKey){}
+else if(p.home){p.angle=p.phase0+p.orbSpeed*clock.elapsedTime;}
+else if(p.sunhen){p.angle=p.phase0+p.orbSpeed*clock.elapsedTime;}
+else p.angle+=p.orbSpeed*dt;
+p.pos.set(p.starPos.x+Math.cos(p.angle)*p.orbR,p.starPos.y+Math.sin(p.angle)*p.orbR*p.incl,p.starPos.z+Math.sin(p.angle)*p.orbR);
+p.mesh.position.copy(p.pos);p.atmo.position.copy(p.pos);p.clouds.position.copy(p.pos);
+p.mesh.rotation.y+=dt*.04;p.clouds.rotation.y+=dt*.05;});
+planetCollisions();
+stations.forEach(function(st){if(st.ring)st.ring.rotation.z+=dt*.4;
+if(st.beacons)st.beacons.forEach(function(b,i){b.opacity=.35+.65*Math.abs(Math.sin(clock.elapsedTime*3+i));});});
+if(graveBeacon&&graveBeacon.visible)graveBeacon.userData.orb.scale.setScalar(1+.3*Math.sin(clock.elapsedTime*4));
+debris=debris.filter(function(d){d.life-=dt;d.m.position.add(d.m.userData.vel.clone().multiplyScalar(dt));
+d.m.rotation.x+=dt*2;d.m.scale.multiplyScalar(Math.pow(.4,dt));
+if(d.life<=0){space.remove(d.m);return false;}return true;});
+capitalShots=capitalShots.filter(function(cs){
+cs.life-=dt;cs.m.position.add(cs.vel.clone().multiplyScalar(dt));
+if(cs.target.dead){space.remove(cs.m);return false;}
+const tp=cs.target.pos;const d=cs.m.position.distanceTo(tp);
+if(d<cs.radius){explosion(cs.m.position,cs.radius*.6,0,false);
+if(cs.isStar){cs.target.hp-=cs.dmg;barTarget=cs.target;barT=5;if(cs.target.hp<=0)destroyStar(cs.target);}
+else{cs.target.hp-=cs.dmg;barTarget=cs.target;barT=5;if(cs.target.hp<=0)destroyByShip(cs.target);}
+space.remove(cs.m);return false;}
+if(cs.life<=0){space.remove(cs.m);return false;}return true;});
+activePlanets.forEach(function(p){if(p.dead)return;
+tmpV.copy(player.position).sub(p.pos);const d=tmpV.length();
+if(d>0.01&&d<p.r+1.5){tmpV.normalize().multiplyScalar(p.r+1.5);player.position.copy(p.pos).add(tmpV);}});
+stars.forEach(function(s){if(s.dead)return;
+tmpV.copy(player.position).sub(s.pos);const d=tmpV.length();
+if(d>0.01&&d<s.r+2){tmpV.normalize().multiplyScalar(s.r+2);player.position.copy(s.pos).add(tmpV);}
+if(d<s.r*1.6){P.hp-=22*dt;lastDmgT=clock.elapsedTime;flashDmg();shake=Math.max(shake,.25);
+if(heatWarn<=0){showBanner('🔥 КОРОНА ЗВЕЗДЫ!','#ff9a3c');heatWarn=4;}
+if(P.hp<=0){P.hp=0;die('СГОРЕЛИ В КОРОНЕ ЗВЕЗДЫ');}}});
+heatWarn=Math.max(0,heatWarn-dt);
+let bhNear=false;
+bhs.forEach(function(bh){bh.disk.rotation.z+=dt*.6;
+const to=bh.pos.clone().sub(player.position);const d=to.length();
+if(d<bh.r*14&&!bhSeen){bhSeen=true;addCodex('blackhole');}
+if(d<bh.r*14){bhNear=true;
+/* === ФИКС ЗАВИСАНИЯ: кламп тяги + защита от d=0 === */
+if(d>0.01){
+const a=Math.min(170,320*Math.pow(bh.r*3.2/d,2));
+P.vel.add(to.normalize().multiplyScalar(a*dt));
+if(P.vel.length()>350)P.vel.setLength(350);}
+if(mode==='dead')return;
+if(d<bh.r*1.15&&!bhFate&&dmgImmune<=0){bhFate=true;
+if(Math.random()<.5)die('ЗАТЯНУТЫ ЗА ГОРИЗОНТ СОБЫТИЙ');
+else{dmgImmune=2.5;
+const tv=new THREE.Vector3(rand(-1,1),rand(-.3,.3),rand(-1,1));
+if(tv.lengthSq()<0.001)tv.set(1,0,0);
+player.position.add(tv.normalize().multiplyScalar(rand(3200,6200)));
+nudgeFromHazards();
+if(Math.random()<.08)dropLegendaryPart();
+showBanner('⚪ ВЫБРОС ИЗ БЕЛОЙ ДЫРЫ — вы выжили!','#eaffff');bloomBoost=Math.max(bloomBoost,1);chromBoost=Math.max(chromBoost,.5);}}
+else if(d<bh.r*2.2&&dmgImmune<=0){P.hp-=20*dt;lastDmgT=clock.elapsedTime;flashDmg();shake=.4;
+if(bhWarn<=0){showBanner('🕳 ГОРИЗОНТ БЛИЗКО!','#ff5566');bhWarn=4;}
+if(P.hp<=0){P.hp=0;die('РАЗОРВАНЫ ПРИЛИВНЫМИ СИЛАМИ');}}}});
+if(!bhNear)bhFate=false;
+bhWarn=Math.max(0,bhWarn-dt);
+secTick-=dt;
+if(secTick<=0){secTick=.4;streamingUpdate(mode==='surface'?anchorPos:player.position);}
+let best=null,bd=1e9;
+stars.forEach(function(s){if(s.dead)return;const d=s.pos.distanceTo(player.position);if(d<bd){bd=d;best=s;}});
+if(best){starLight.position.copy(best.pos);starLight.color.set(best.col);starLight.intensity=best.i*clamp(1.2-bd/5000,.25,1);}
+else starLight.intensity=.3;
+derelictT-=dt;
+if(derelictT<=0){derelictT=rand(8,15);if(Math.random()<0.0005)spawnDerelict();}
+directorT-=dt;
+if(directorT<=0){directorT=rand(15,30);runEncounter();}
+chatterT-=dt;
+if(chatterT<=0){chatterT=rand(30,55);radioChatter();}
+if(nemesisCd>0)nemesisCd-=dt;
+if(warActive){
+warT-=dt;$('warT').textContent=Math.ceil(warT);
+if(mode==='space'){
+warMeteorT-=dt;
+if(warMeteorT<=0){warMeteorT=rand(.4,1);
+const m=new THREE.Mesh(G.met,eMat(0x3a2a20,0xff6a28,.8));m.scale.setScalar(rand(.8,2));
+const a=rand(0,Math.PI*2);
+m.position.copy(player.position).add(new THREE.Vector3(Math.cos(a)*rand(150,300),rand(-80,80),Math.sin(a)*rand(150,300)));
+const vel=player.position.clone().sub(m.position).normalize().multiplyScalar(rand(40,70));
+space.add(m);meteors.push({m:m,vel:vel,life:6});}
+shake=Math.max(shake,.1);
+if(Math.random()<dt*.3)damagePlayer(rand(4,12));
+if(enemies.length<10&&Math.random()<dt*.5){const cls=SHIPS[Math.floor(rand(0,8))];
+const a=rand(0,Math.PI*2);const p2=nudgePos(player.position.clone().add(new THREE.Vector3(Math.cos(a)*200,rand(-40,40),Math.sin(a)*200)));
+const e=mkShip(cls,p2);e.aggro=true;e.ind.visible=true;enemies.push(e);}}
+if(warT<=0)endWar();
+}else{nextWarT-=dt;if(nextWarT<=0)startWar();}
+evT-=dt;if(evT<=0&&!warActive){evT=rand(20,35);triggerEvent();}
+pickups=pickups.filter(function(pk){
+if(pk.kind==='derelict'||pk.kind==='wreck'){pk.m.rotation.y+=dt*.2;
+if(pk.m.userData.flick)pk.m.userData.flick.opacity=Math.random()<.5?.15:(pk.working?.7:.45);
+return true;}
+pk.t-=dt;pk.m.rotation.y+=dt;if(pk.t<=0){space.remove(pk.m);return false;}return true;});
+meteors=meteors.filter(function(mt){mt.life-=dt;mt.m.position.add(mt.vel.clone().multiplyScalar(dt));mt.m.rotation.x+=dt*3;
+if(mt.m.position.distanceTo(player.position)<2.6*mt.m.scale.x){explosion(mt.m.position,5,15,false);space.remove(mt.m);return false;}
+if(mt.life<=0){space.remove(mt.m);return false;}return true;});}
+const arr=starDust.geometry.attributes.position.array;
+for(let i=0;i<STAR_DUST_N;i++){
+const ix=i*3;
+arr[ix]+=P.vel.x*dt*.05;arr[ix+1]+=P.vel.y*dt*.05;arr[ix+2]+=P.vel.z*dt*.05;
+const dx=arr[ix]-player.position.x,dy=arr[ix+1]-player.position.y,dz=arr[ix+2]-player.position.z;
+if(Math.hypot(dx,dy,dz)>40){
+arr[ix]=player.position.x+rand(-40,40);
+arr[ix+1]=player.position.y+rand(-40,40);
+arr[ix+2]=player.position.z+rand(-40,40);}}
+starDust.geometry.attributes.position.needsUpdate=true;
+trailT-=dt;
+const hasShip=mode==='space'&&activeShip;
+if(trailT<=0&&hasShip&&P.vel.lengthSq()>4){
+trailT=.04;
+for(let i=TRAIL_N-1;i>0;i--){
+trailPos[i*3]=trailPos[(i-1)*3];trailPos[i*3+1]=trailPos[(i-1)*3+1];trailPos[i*3+2]=trailPos[(i-1)*3+2];}
+trailPos[0]=player.position.x;trailPos[1]=player.position.y;trailPos[2]=player.position.z;
+trailGeo.attributes.position.needsUpdate=true;}
+for(const p of JET_POOL){if(p.life>0){
+p.life-=dt;
+p.m.position.add(p.vel.clone().multiplyScalar(dt));
+p.vel.y-=2*dt;
+const k=1-p.life/p.maxLife;
+p.m.scale.setScalar(.3*(1+k*.8)*(p.life/p.maxLife));
+p.m.material.opacity=.85*(p.life/p.maxLife);
+if(p.life<=0){p.m.visible=false;p.m.material.opacity=0;}}}
+for(let i=TRACERS.length-1;i>=0;i--){
+const t=TRACERS[i];t.life-=dt;
+t.m.material.opacity=clamp(t.life/.18,0,1)*.85;
+if(t.life<=0){activeScene.remove(t.m);t.m.geometry.dispose();TRACERS.splice(i,1);}}
+bgGroup.position.copy(player.position);
+player.rotation.y=P.yaw+Math.PI;
+const sd2=mode==='space'&&activeShip?pshipById(activeShip):null;
+if(sd2){
+if(lastRenderedShip!==activeShip){if(playerShipGrp)space.remove(playerShipGrp);playerShipGrp=buildPlayerShip(sd2);lastRenderedShip=activeShip;}
+if(playerShipGrp&&!playerShipGrp.parent)space.add(playerShipGrp);
+if(playerShipGrp){playerShipGrp.position.copy(player.position);playerShipGrp.rotation.y=P.yaw+Math.PI;playerShipGrp.visible=(camMode===1);
+const eng=playerShipGrp.userData.engines;
+if(eng)eng.forEach(function(m,i){m.scale.setScalar(1+Math.sin(clock.elapsedTime*14+i)*0.3);});}
+player.visible=false;
+}else{
+if(playerShipGrp)playerShipGrp.visible=false;
+player.visible=(camMode===1);}
+vm.visible=camMode===0&&mode!=='dead';
+vmTip.material=bMat(WPN[P.weapon].col);vmCell.material=bMat(WPN[P.weapon].col);
+const cd=camDir();
+if(camMode===0){
+camera.position.copy(player.position).add(new THREE.Vector3(0,1.55,0));
+camera.quaternion.setFromEuler(new THREE.Euler(P.pitch,P.yaw,0,'YXZ'));
+bobT+=dt*(wish.lengthSq()>0&&P.onGround?9:2);
+vm.position.set(.34,-.32+(P.onGround?Math.sin(bobT)*.015:0)-vmKick*.04,-.62+vmKick*.09);
+vm.rotation.x=vmKick*.12;}
+else{
+const head=player.position.clone().add(new THREE.Vector3(0,1.6,0));
+const cp=head.clone().sub(cd.clone().multiplyScalar(sd2?sd2.tier*3+9:9));
+if(mode==='surface')cp.y=Math.max(cp.y,terrainH(cp.x,cp.z)+.8);
+camera.position.lerp(cp,1-Math.pow(.0001,dt));
+camera.lookAt(head.clone().add(cd.clone().multiplyScalar(6)));}
+if(shake>0)camera.position.add(new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).multiplyScalar(shake*.35));
+if(fireHeld)shoot();
+spawnT-=dt;if(spawnT<=0){spawnT=rand(3.5,6);spawnEnemy();}
+enemies.forEach(function(e){
+if(e.dead)return;
+e.ph+=dt;
+if(e.flash>0){e.flash=Math.max(0,e.flash-dt*5);e.g.scale.setScalar(1+e.flash*.22);}
+const ud=e.g.userData;
+if(ud.engines)ud.engines.forEach(function(m,i){m.scale.setScalar(1+Math.sin(e.ph*14+i)*0.3);});
+if(ud.spin)ud.spin.rotation.z+=dt*(e.cls&&e.cls.k===3?1.5:.8);
+if(e.bar){e.bar.quaternion.copy(camera.quaternion);
+const r=clamp(e.hp/e.maxHp,0,1);const u=e.bar.userData;
+u.fg.scale.x=Math.max(r,.001);u.fg.position.x=-(1-r)*u.w/2;}
+const toP=player.position.clone().sub(e.g.position);const d=toP.length();
+if(!e.aggro){
+if(d<e.aggroR)aggroEnemy(e);
+else{
+e.wT-=dt;
+if(e.wT<=0){e.wT=rand(2,5);e.wander.set(rand(-1,1),rand(-.3,.3),rand(-1,1));if(e.wander.lengthSq()>0)e.wander.normalize();e.wander.multiplyScalar(rand(.3,.8));}
+e.g.position.add(e.wander.clone().multiplyScalar(e.spd*.25*dt));
+if(e.type==='crawler'&&mode==='surface')e.g.position.y=terrainH(e.g.position.x,e.g.position.z)+.6;
+e.g.rotation.y+=dt*.4;
+if(e.type==='crawler'&&ud.legs)ud.legs.forEach(function(lg,i){lg.rotation.x=Math.sin(e.ph*3+i)*0.15;});}
+return;}
+if(e.cls){shipBehavior(e,dt,d,toP);return;}
+if(e.type==='crawler'){
+if(d>2.6)e.g.position.add(toP.clone().setY(0).normalize().multiplyScalar(e.spd*dt));
+e.g.position.y=terrainH(e.g.position.x,e.g.position.z)+.6;
+e.g.lookAt(player.position.x,e.g.position.y,player.position.z);
+if(ud.legs)ud.legs.forEach(function(lg,i){lg.rotation.x=Math.sin(e.ph*10+i*1.05)*.4;});
+e.meleeCd-=dt;
+if(d<3.4&&e.meleeCd<=0){e.meleeCd=1.3;damagePlayer(12+P.threat*2);}}});
+pBullets=pBullets.filter(function(b){
+b.life-=dt;if(b.grav)b.vel.y-=25*dt;
+const old=b.m.position.clone();
+b.m.position.add(b.vel.clone().multiplyScalar(dt));
+if(b.col&&b.prevPos){spawnTracer(b.prevPos,b.m.position,b.col);b.prevPos.copy(b.m.position);}
+if(b.life<=0){activeScene.remove(b.m);return false;}
+if(bulletHitsWorld(b)){activeScene.remove(b.m);return false;}
+if(mode==='surface'&&b.m.position.y<terrainH(b.m.position.x,b.m.position.z)){
+if(b.boom)explosion(b.m.position,b.boom,b.dmg,true);activeScene.remove(b.m);return false;}
+for(const e of enemies){if(!e.dead&&e.g.position.distanceTo(b.m.position)<(e.cls?e.cls.len*.6+1.5:2.4)){
+if(b.boom)explosion(b.m.position,b.boom,b.dmg,true);else hitEnemy(e,b.dmg);
+activeScene.remove(b.m);return false;}}
+return true;});
+eBullets=eBullets.filter(function(b){
+b.life-=dt;
+const old=b.m.position.clone();
+b.m.position.add(b.vel.clone().multiplyScalar(dt));
+if(b.col&&b.prevPos){spawnTracer(b.prevPos,b.m.position,b.col);b.prevPos.copy(b.m.position);}
+const hitGround=mode==='surface'&&b.m.position.y<terrainH(b.m.position.x,b.m.position.z);
+if(b.life<=0||hitGround){activeScene.remove(b.m);return false;}
+if(b.m.position.distanceTo(player.position.clone().add(new THREE.Vector3(0,1,0)))<(P.shield>0?3:1.4)){
+damagePlayer(b.dmg);activeScene.remove(b.m);return false;}
+return true;});
+crystals.forEach(function(c){if(!c.taken)c.g.rotation.y+=dt*2;});
+fx=fx.filter(function(f){f.t+=dt;const k=f.t/f.life;if(f.upd)f.upd(k);if(k>=1){activeScene.remove(f.m);return false;}return true;});
+if(P.shield>0&&!shieldMesh){shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(2.8,24,16),new THREE.MeshBasicMaterial({color:0x35e0ff,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));player.add(shieldMesh);}
+if(P.shield<=0&&shieldMesh){player.remove(shieldMesh);shieldMesh=null;}
+saveT-=dt;if(saveT<=0){saveT=20;if(mode!=='menu')saveGame();}
+bloomBoost=Math.max(0,bloomBoost-dt*.8);
+chromBoost=Math.max(0,chromBoost-dt*1.2);
+const targetBloom=baseBloom+bloomBoost;
+bloomPass.strength+=(targetBloom-bloomPass.strength)*.15;
+uiT+=dt;
+if(uiT>=.08){uiT=0;
+let pr='';
+if(mode==='surface'){
+if(Math.hypot(player.position.x,player.position.z)<9)pr='<b>F</b> или <b>B</b> — 🚀 ВЗЛЁТ';
+else{for(const c of crystals)if(!c.taken&&c.g.position.distanceTo(player.position)<7+inv.mods.magnet*4){pr='<b>F</b> — Собрать 💎';break;}
+if(!pr&&player.position.y>120)pr='Поднимайтесь выше или <b>B — ВЗЛЁТ</b>';}}
+else{
+for(const st of stations)if(st.pos.distanceTo(player.position)<50){pr='<b>F</b> — 🛰 '+st.name+' (ремонт/верфь)';break;}
+if(!pr)for(const pk of pickups)if(pk.m.position.distanceTo(player.position)<18){
+pr=pk.kind==='wreck'?'<b>F</b> — Осмотреть обломок':pk.kind==='derelict'?'<b>F</b> — Заброшенный корабль':pk.kind==='cargo'?'<b>F</b> — Контейнер':pk.kind==='artifact'?'<b>F</b> — Артефакт':'<b>F</b> — Маяк';break;}
+if(!pr&&grave){const right=(grave.mode==='space'&&mode==='space')||(grave.mode==='surface'&&mode==='surface');
+if(right&&player.position.distanceTo(grave.pos)<20)pr='<b>F</b> — 📦 Забрать груз у маяка';}
+if(!pr){const np=nearestPlanet();if(np&&np.d<np.p.r*.6+80)pr='<b>F</b> — Сесть на '+np.p.name;}}
+if(pr!==lastPrompt){lastPrompt=pr;$('prompt').style.display=pr?'block':'none';$('prompt').innerHTML=pr;}
+updateHUD();drawRadar();}}
+function drawRadar(){
+const c=radarC;c.clearRect(0,0,148,148);
+c.fillStyle='rgba(5,15,25,.6)';c.beginPath();c.arc(74,74,70,0,7);c.fill();
+c.strokeStyle='rgba(53,224,255,.3)';
+for(let r=23;r<=69;r+=23){c.beginPath();c.arc(74,74,r,0,7);c.stroke();}
+c.save();c.translate(74,74);c.rotate(-P.yaw);
+const dot=function(x,z,col,sz){c.fillStyle=col;c.beginPath();c.arc(x,z,sz||3,0,7);c.fill();};
+const proj=function(v){const lx=v.x*Math.cos(-P.yaw)-v.z*Math.sin(-P.yaw),lz=-v.x*Math.sin(-P.yaw)-v.z*Math.cos(-P.yaw);return[lx,lz];};
+homePos(homeTmp,clock.elapsedTime);
+const hv=homeTmp.clone().sub(player.position);const hd=hv.length()||1;
+const hp2=proj(hv);dot(hp2[0]/hd*64,hp2[1]/hd*64,'#ffd25e',4.5);
+sunhenPos(sunhenTmp,clock.elapsedTime);
+const sv=sunhenTmp.clone().sub(player.position);const sdh=sv.length()||1;
+const sp2=proj(sv);dot(sp2[0]/sdh*64,sp2[1]/sdh*64,'#ff2244',4.5);
+if(mode==='space'){
+stations.forEach(function(st){const v=st.pos.clone().sub(player.position);const d=v.length()||1;const a=proj(v);dot(a[0]/d*58,a[1]/d*58,'#7fff9a',3.5);});
+activePlanets.forEach(function(p){if(p.dead)return;const v=p.pos.clone().sub(player.position);const d=v.length()||1;const a=proj(v);dot(a[0]/d*60,a[1]/d*60,p.sunhen?'#ff2244':'#8fd8ff',4);});
+stars.forEach(function(s){if(s.dead)return;const v=s.pos.clone().sub(player.position);const d=v.length()||1;const a=proj(v);dot(a[0]/d*55,a[1]/d*55,'#ffd25e',3);});
+bhs.forEach(function(b){const v=b.pos.clone().sub(player.position);const d=v.length()||1;const a=proj(v);dot(a[0]/d*66,a[1]/d*66,'#b060ff',5);});
+if(grave&&grave.mode==='space'&&grave.beaconVisible){
+const gv=grave.pos.clone().sub(player.position);const gd=gv.length()||1;const ga=proj(gv);
+dot(ga[0]/gd*60,ga[1]/gd*60,'#ffb020',4+Math.sin(clock.elapsedTime*5)*1);}
+pickups.forEach(function(pk){if(pk.kind!=='wreck'&&pk.kind!=='derelict')return;
+const v=pk.m.position.clone().sub(player.position);const d=v.length();if(d>600)return;const a=proj(v);
+dot(a[0]/(d||1)*60,a[1]/(d||1)*60,pk.working?'#7fff9a':'#666666',2.5);});}
+enemies.forEach(function(e){if(e.dead)return;const v=e.g.position.clone().sub(player.position);const a=proj(v);
+if(Math.abs(a[0])<68&&Math.abs(a[1])<68)dot(a[0],a[1],e.aggro?'#ff3860':'#c07840',e.cls&&e.cls.t>=6?4:3);});
+crystals.forEach(function(cr){if(cr.taken)return;const a=proj(cr.g.position.clone().sub(player.position));
+if(Math.abs(a[0])<68&&Math.abs(a[1])<68)dot(a[0],a[1],'#40e8ff',2.5);});
+pickups.forEach(function(pk){if(pk.kind==='wreck'||pk.kind==='derelict')return;
+const a=proj(pk.m.position.clone().sub(player.position));
+const n=Math.hypot(a[0],a[1])||1;dot(a[0]/n*62,a[1]/n*62,pk.kind==='beacon'?'#ff5566':'#ffd25e',3.5);});
+c.restore();
+c.fillStyle='#35e0ff';c.beginPath();c.moveTo(74,68);c.lineTo(70,78);c.lineTo(78,78);c.fill();}
+let cutOn=false,cutT=0,cutStars=[];
+const cutCv=$('cutCv'),cutCtx=cutCv.getContext('2d');
+const CUT_LINES=[
+{t:3.6,d:2.2,txt:'Грузовой крейсер «АВРОРА». 47 дней от точки старта.',cls:''},
+{t:6.0,d:2.4,txt:'Изначальная миссия: уничтожить Прайм-Улей расы СЮНХЭН.',cls:'green'},
+{t:8.6,d:2.2,txt:'Но ночью вахтенные подняли бунт.',cls:''},
+{t:11.0,d:2.2,txt:'Капитан Джексон Лерой объявлен предателем.',cls:'red'},
+{t:13.4,d:2.0,txt:'Приговор: выброс в открытый космос.',cls:'red'},
+{t:15.6,d:2.6,txt:'«Они думают, что я погиб. Они ошибаются.»',cls:'gold'}];
+function fitCut(){cutCv.width=innerWidth;cutCv.height=innerHeight;}
+function startCut(){$('menuS').style.display='none';startAmbient();
+$('cutS').style.display='block';fitCut();
+const box=$('cutLines');box.innerHTML='';
+CUT_LINES.forEach(function(l){const d=document.createElement('div');d.className='cutLine '+l.cls;d.textContent=l.txt;box.appendChild(d);});
+cutStars=[];for(let i=0;i<220;i++)cutStars.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,s:rand(.4,1.8),v:rand(6,30)});
+cutT=0;cutOn=true;}
+function skipStory(){$('menuS').style.display='none';startAmbient();startGamePlay();}
+function endCut(){if(!cutOn)return;cutOn=false;$('cutS').style.display='none';startGamePlay();}
+function ease(t){return t<0?0:t>1?1:t*t*(3-2*t);}
+function cutUpdate(dt){
+cutT+=dt;const t=cutT,W=cutCv.width,H=cutCv.height,ctx=cutCtx;
+ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+cutStars.forEach(function(s){s.x-=s.v*dt*s.s;if(s.x<0){s.x=W;s.y=Math.random()*H;}
+ctx.fillStyle='rgba(255,255,255,'+(.3+s.s*.35)+')';ctx.fillRect(s.x,s.y,s.s*1.6,s.s*1.6);});
+const shipY=H*.42;let shipX;
+if(t<3)shipX=W+300;
+else if(t<11)shipX=W+300-(W*.45+300)*ease((t-3)/8);
+else if(t<13)shipX=W*.55+Math.sin(t*9)*2;
+else shipX=W*.55-Math.pow(t-13,2)*95;
+if(shipX>-400&&t>=3){
+ctx.save();ctx.translate(shipX,shipY);
+const eng=14+Math.random()*10;
+const gr=ctx.createRadialGradient(120,0,2,120,0,eng+22);
+gr.addColorStop(0,'rgba(255,240,200,.95)');gr.addColorStop(.4,'rgba(255,150,60,.7)');gr.addColorStop(1,'rgba(255,80,20,0)');
+ctx.fillStyle=gr;ctx.beginPath();ctx.arc(120,0,eng+22,0,7);ctx.fill();
+ctx.fillStyle='#26313d';ctx.strokeStyle='#4a5d72';ctx.lineWidth=2;
+ctx.beginPath();ctx.moveTo(-130,0);ctx.quadraticCurveTo(-90,-26,0,-26);ctx.lineTo(95,-20);
+ctx.quadraticCurveTo(120,-14,120,0);ctx.quadraticCurveTo(120,14,95,20);ctx.lineTo(0,26);
+ctx.quadraticCurveTo(-90,26,-130,0);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.fillStyle='#8fd8ff';for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(-70+i*26,-4,3,0,7);ctx.fill();}
+ctx.fillStyle='#6d8098';ctx.font='11px Segoe UI';ctx.fillText('АВРОРА',-20,14);
+if(t>=11){ctx.fillStyle='rgba(255,60,70,'+(.5+.5*Math.sin(t*10))+')';ctx.beginPath();ctx.arc(0,-32,5,0,7);ctx.fill();}
+ctx.restore();}
+if(t>=13){
+const te=t-13;const ax=W*.55+70*te,ay=shipY+10+42*te+9*te*te,rot=te*2.4;
+if(t<13.3){ctx.fillStyle='rgba(255,255,255,'+(1-(t-13)/.3)+')';ctx.beginPath();ctx.arc(W*.55+8,shipY+12,26,0,7);ctx.fill();}
+ctx.save();ctx.translate(ax,ay);ctx.rotate(rot);
+ctx.fillStyle='#8a97a5';ctx.fillRect(-13,-2,6,14);
+ctx.fillStyle='#cfd6dd';ctx.fillRect(-6,-4,12,20);
+ctx.fillStyle='#dfe6ee';ctx.beginPath();ctx.arc(0,-10,7,0,7);ctx.fill();
+ctx.fillStyle='#35e0ff';ctx.beginPath();ctx.arc(2,-11,3.4,0,7);ctx.fill();
+ctx.restore();}
+$('cutTitle').style.opacity=(t>.4&&t<3.2)?1:0;
+const lines=$('cutLines').children;
+for(let i=0;i<CUT_LINES.length;i++){const l=CUT_LINES[i];lines[i].style.opacity=(t>=l.t&&t<l.t+l.d)?1:0;}
+$('cutMission').style.opacity=(t>=18.5)?1:0;
+if(t>21.5)endCut();}
+function startGamePlay(){
+if(_started)return;_started=true;
+activeScene=space;space.add(player);space.add(camera);
+buildSector(0,0);buildSector(HOME_SECT.x,HOME_SECT.z);buildSector(SUNHEN_SECT.x,SUNHEN_SECT.z);
+streamingUpdate(new THREE.Vector3(0,0,0));
+player.position.set(0,50,420);P.vel.set(0,0,0);
+nudgeFromHazards();
+const loaded=loadGame();
+if(loaded){showBanner('💾 Сохранение загружено. С возвращением, капитан.','#7fff9a');}
+else{invAdd('medkit',2);invAdd('kicell',1);}
+mode='space';evT=15;startT=clock.elapsedTime;setTut();addCodex('start');lockPointer();
+$('camBtn').textContent=camMode===0?'🎥 ВИД: 1-е лицо [V]':'🎥 ВИД: 3-е лицо [V]';
+if(!loaded)showBanner('🎯 Капитан Лерой: доберитесь до Гелиос-Прайм. V — смена вида.','#ffd25e');}
+addEventListener('resize',function(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);if(cutOn)fitCut();});
+function animate(){
+requestAnimationFrame(animate);
+let dt=Math.min(clock.getDelta(),.05);
+frames++;fpsAcc+=dt;
+if(fpsAcc>=.5){fps=Math.round(frames/fpsAcc);frames=0;fpsAcc=0;}
+if(cutOn){cutUpdate(dt);return;}
+if(slowT>0){slowT-=dt;dt*=.35;}
+adaptT+=dt;
+if(adaptT>2){adaptT=0;
+if(fps<42&&curPixel>.6){curPixel=Math.max(.6,curPixel-.15);renderer.setPixelRatio(curPixel);composer.setPixelRatio(curPixel);renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);}
+else if(fps>57&&curPixel<QUAL[QI].pixel){curPixel=Math.min(QUAL[QI].pixel,curPixel+.1);renderer.setPixelRatio(curPixel);composer.setPixelRatio(curPixel);renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);}}
+if(mode!=='menu'&&!paused&&!invOpen&&!winOpen&&!stOpen)update(dt);
+composer.passes[0].scene=activeScene;
+composer.render();}
+animate();
+</script>
+</body>
+</html>
