@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTRA PROTOCOL — браузерная космическая сага</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04060f; --panel:rgba(10,16,32,.72); --line:rgba(90,200,255,.16);
+  --cyan:#4de3ff; --violet:#a06bff; --gold:#ffc24d; --text:#e8f1ff; --muted:#8ea3c0;
+  --r-common:#8fa7c4; --r-rare:#4da3ff; --r-epic:#a06bff; --r-legend:#ffc24d;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;overflow-x:hidden}
+.hidden{display:none!important}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:inherit;text-decoration:none}
+img{display:block}
+
+/* ==== ФОН ==== */
+#stars{position:fixed;inset:0;z-index:-2}
+.vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 30%,transparent 40%,rgba(2,4,10,.8) 100%);}
+
+/* ==== ШАПКА ==== */
+header{position:fixed;top:0;left:0;right:0;z-index:20;height:72px;
+  display:flex;align-items:center;gap:28px;padding:0 4vw;
+  background:rgba(4,6,15,.65);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{font-family:Orbitron;font-weight:900;font-size:20px;letter-spacing:.12em;position:relative}
+.logo span{color:var(--cyan)}
+.logo:hover{animation:glitch .35s steps(2) 2}
+@keyframes glitch{25%{text-shadow:2px 0 var(--violet),-2px 0 var(--cyan)}75%{text-shadow:-2px 0 var(--violet),2px 0 var(--cyan)}}
+nav{display:flex;gap:26px;margin-left:auto}
+nav a{color:var(--muted);font-size:14px;letter-spacing:.08em;text-transform:uppercase;position:relative;padding:6px 0}
+nav a::after{content:'';position:absolute;left:0;bottom:0;height:1px;width:0;background:var(--cyan);transition:.3s;box-shadow:0 0 8px var(--cyan)}
+nav a:hover{color:var(--text)} nav a:hover::after{width:100%}
+.hud{display:flex;align-items:center;gap:10px}
+.chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line);border-radius:10px;
+  background:rgba(10,16,32,.6);font-size:14px;transition:.25s}
+.chip:hover{border-color:var(--cyan);box-shadow:0 0 14px rgba(77,227,255,.25)}
+.chip b{color:var(--gold);font-family:Orbitron}
+.user-wrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 8px);min-width:190px;background:var(--panel);backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-radius:12px;padding:6px;display:none;flex-direction:column}
+.menu.open{display:flex}
+.menu button{padding:10px 12px;text-align:left;border-radius:8px;font-size:14px;color:var(--muted)}
+.menu button:hover{background:rgba(77,227,255,.08);color:var(--text)}
+
+/* ==== КНОПКИ ==== */
+.btn{font-family:Orbitron;font-weight:700;letter-spacing:.1em;font-size:13px;text-transform:uppercase;
+  padding:13px 24px;border-radius:10px;border:1px solid transparent;transition:.25s;position:relative}
+.btn.primary{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#041018;
+  box-shadow:0 0 22px rgba(77,227,255,.35)}
+.btn.primary:hover{box-shadow:0 0 34px rgba(77,227,255,.6);transform:translateY(-2px)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:var(--cyan);box-shadow:0 0 16px rgba(77,227,255,.2)}
+.btn.play{font-size:16px;padding:18px 44px;color:#041018;
+  background:linear-gradient(135deg,var(--cyan),#7ab8ff 55%,var(--violet));
+  box-shadow:0 0 30px rgba(77,227,255,.45);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 24px rgba(77,227,255,.4)}50%{box-shadow:0 0 48px rgba(77,227,255,.75)}}
+.btn.play:hover{transform:scale(1.05)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn.small{padding:9px 16px;font-size:11px}
+
+/* ==== HERO ==== */
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-art{position:absolute;inset:0}
+.hero-art img{width:100%;height:100%;object-fit:cover;opacity:.55;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 42%,#000 25%,transparent 78%);
+  mask-image:radial-gradient(ellipse at 50% 42%,#000 25%,transparent 78%);
+  animation:breathe 14s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.hero-content{position:relative;z-index:2;text-align:center;padding:0 20px}
+.tag{display:inline-block;font-family:Orbitron;font-size:11px;letter-spacing:.35em;text-transform:uppercase;
+  color:var(--cyan);border:1px solid rgba(77,227,255,.35);padding:8px 18px;border-radius:999px;margin-bottom:26px;
+  background:rgba(77,227,255,.06)}
+h1{font-family:Orbitron;font-weight:900;font-size:clamp(42px,9vw,96px);letter-spacing:.1em;
+  background:linear-gradient(90deg,#fff,var(--cyan),var(--violet),#fff);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 6s linear infinite;filter:drop-shadow(0 0 26px rgba(77,227,255,.35))}
+@keyframes shimmer{to{background-position:300% 0}}
+.sub{color:var(--muted);font-size:clamp(15px,2vw,19px);font-weight:300;max-width:640px;margin:18px auto 38px;line-height:1.7}
+.cta{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.stats{display:flex;gap:44px;justify-content:center;margin-top:56px;flex-wrap:wrap}
+.stat b{font-family:Orbitron;font-size:22px;color:var(--cyan);display:block}
+.stat span{color:var(--muted);font-size:12px;letter-spacing:.15em;text-transform:uppercase}
+
+/* 3D-фигуры */
+.gyro{position:absolute;right:7%;top:16%;width:320px;height:320px;transform-style:preserve-3d;
+  animation:floaty 9s ease-in-out infinite;opacity:.8;pointer-events:none}
+.gyro i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(77,227,255,.5)}
+.gyro i:nth-child(1){animation:spinA 9s linear infinite}
+.gyro i:nth-child(2){border-color:rgba(160,107,255,.5);animation:spinB 12s linear infinite}
+.gyro i:nth-child(3){border-color:rgba(255,194,77,.4);animation:spinC 15s linear infinite}
+.gyro .core{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--cyan) 45%,#0a2a4a 90%);
+  box-shadow:0 0 40px var(--cyan)}
+@keyframes spinA{from{transform:rotateY(70deg) rotateZ(0)}to{transform:rotateY(70deg) rotateZ(360deg)}}
+@keyframes spinB{from{transform:rotateX(65deg) rotateY(20deg) rotateZ(360deg)}to{transform:rotateX(65deg) rotateY(20deg) rotateZ(0)}}
+@keyframes spinC{from{transform:rotateX(90deg) rotateY(-30deg) rotateZ(0)}to{transform:rotateX(90deg) rotateY(-30deg) rotateZ(360deg)}}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -22px}}
+.cube{position:absolute;left:8%;bottom:16%;width:70px;height:70px;transform-style:preserve-3d;
+  animation:cubeSpin 16s linear infinite;pointer-events:none}
+.cube b{position:absolute;inset:0;border:1px solid rgba(160,107,255,.65);background:rgba(160,107,255,.07);
+  box-shadow:inset 0 0 18px rgba(160,107,255,.3)}
+.cube b:nth-child(1){transform:rotateY(0deg) translateZ(35px)}
+.cube b:nth-child(2){transform:rotateY(90deg) translateZ(35px)}
+.cube b:nth-child(3){transform:rotateY(180deg) translateZ(35px)}
+.cube b:nth-child(4){transform:rotateY(270deg) translateZ(35px)}
+.cube b:nth-child(5){transform:rotateX(90deg) translateZ(35px)}
+.cube b:nth-child(6){transform:rotateX(-90deg) translateZ(35px)}
+@keyframes cubeSpin{from{transform:rotateX(-20deg) rotateY(0)}to{transform:rotateX(-20deg) rotateY(360deg)}}
+.shard{position:absolute;width:26px;height:26px;background:linear-gradient(135deg,var(--cyan),transparent);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);opacity:.5;animation:floaty 7s ease-in-out infinite;pointer-events:none}
+
+/* ==== СЕКЦИИ ==== */
+.wrap{max-width:1200px;margin:0 auto;padding:100px 24px}
+.sec-head{text-align:center;margin-bottom:54px}
+.sec-head .tag{margin-bottom:16px}
+.sec-head h2{font-family:Orbitron;font-size:clamp(26px,4vw,42px);letter-spacing:.12em;text-transform:uppercase}
+.sec-head p{color:var(--muted);max-width:560px;margin:14px auto 0;font-weight:300}
+
+/* ==== КЕЙСЫ ==== */
+.cases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}
+.case-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;
+  backdrop-filter:blur(10px);transition:.35s;position:relative;overflow:hidden}
+.case-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--acc,rgba(77,227,255,.14)),transparent 60%);opacity:0;transition:.35s}
+.case-card:hover{transform:translateY(-8px);border-color:var(--acc,var(--cyan));box-shadow:0 18px 44px rgba(0,0,0,.5)}
+.case-card:hover::before{opacity:1}
+.case-card img{width:100%;height:190px;object-fit:cover;border-radius:12px;margin-bottom:18px;transition:.35s}
+.case-card:hover img{transform:scale(1.04)}
+.case-card h3{font-family:Orbitron;letter-spacing:.08em;font-size:18px;margin-bottom:12px}
+.chances{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.chances span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.chances i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.case-foot{display:flex;align-items:center;justify-content:space-between}
+.price{font-family:Orbitron;color:var(--gold);font-size:16px}
+
+/* ==== МАГАЗИН ==== */
+.tabs{display:flex;gap:12px;justify-content:center;margin-bottom:40px}
+.tabs button{padding:12px 28px;border:1px solid var(--line);border-radius:999px;font-family:Orbitron;
+  font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);transition:.25s}
+.tabs button.active{color:#041018;background:linear-gradient(135deg,var(--cyan),var(--violet));border-color:transparent}
+.tab-pane{display:none}.tab-pane.active{display:block;animation:fadeUp .5s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 18px;text-align:center;transition:.3s;position:relative;overflow:hidden}
+.item:hover{transform:translateY(-6px);border-color:var(--cyan);box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.item .icon{font-size:44px;margin-bottom:14px;filter:drop-shadow(0 0 14px var(--glow,var(--cyan)))}
+.item h4{font-size:15px;margin-bottom:6px}
+.item p{color:var(--muted);font-size:12px;margin-bottom:16px;min-height:32px}
+.item .bonus{position:absolute;top:12px;right:-30px;transform:rotate(35deg);background:linear-gradient(135deg,var(--gold),#ff9a4d);
+  color:#241300;font-family:Orbitron;font-size:10px;font-weight:700;padding:4px 34px}
+.note{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+
+/* ==== О ИГРЕ ==== */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
+.feature{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px 26px;transition:transform .2s;transform-style:preserve-3d}
+.feature .icon{font-size:38px;margin-bottom:18px;filter:drop-shadow(0 0 12px var(--cyan))}
+.feature h3{font-family:Orbitron;font-size:16px;letter-spacing:.08em;margin-bottom:12px}
+.feature p{color:var(--muted);font-size:14px;line-height:1.7;font-weight:300}
+
+footer{border-top:1px solid var(--line);padding:34px 4vw;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+
+/* ==== МОДАЛКИ ==== */
+.modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(2,4,12,.75);backdrop-filter:blur(10px);padding:20px}
+.modal.open{display:grid}
+.modal-box{width:min(94vw,480px);background:rgba(8,12,26,.92);border:1px solid var(--line);border-radius:20px;
+  padding:34px;position:relative;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+.modal-box.wide{width:min(94vw,940px)}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:14px;right:16px;font-size:20px;color:var(--muted);transition:.2s}
+.modal-close:hover{color:var(--text);transform:rotate(90deg)}
+.modal-box h3{font-family:Orbitron;letter-spacing:.1em;margin-bottom:22px;text-align:center}
+.auth-tabs{display:flex;gap:10px;margin-bottom:22px}
+.auth-tabs button{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-family:Orbitron;font-size:12px;letter-spacing:.1em}
+.auth-tabs button.active{color:var(--text);border-color:var(--cyan);background:rgba(77,227,255,.08)}
+.socials{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.socials button{padding:12px;border-radius:10px;border:1px solid var(--line);font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.25s}
+.socials button:hover{transform:translateY(-2px)}
+.soc-steam:hover{border-color:#66c0f4;box-shadow:0 0 14px rgba(102,192,244,.3)}
+.soc-vk:hover{border-color:#07f;box-shadow:0 0 14px rgba(0,119,255,.3)}
+.soc-tg:hover{border-color:#2aabee;box-shadow:0 0 14px rgba(42,171,238,.3)}
+.soc-ds:hover{border-color:#5865f2;box-shadow:0 0 14px rgba(88,101,242,.3)}
+.divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:18px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line)}
+.field{margin-bottom:14px}
+.field input{width:100%;background:rgba(10,16,32,.8);border:1px solid var(--line);border-radius:10px;
+  padding:13px 16px;color:var(--text);font-family:'Exo 2';font-size:14px;outline:none;transition:.25s}
+.field input:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(77,227,255,.2)}
+.modal-box .btn{width:100%;margin-top:6px}
+
+/* ==== РУЛЕТКА КЕЙСА ==== */
+.roulette{position:relative;height:200px;overflow:hidden;border-radius:14px;border:1px solid var(--line);
+  background:rgba(4,8,18,.8);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.strip{display:flex;gap:12px;position:absolute;left:0;top:14px;will-change:transform}
+.cell{width:140px;height:172px;flex:0 0 auto;border-radius:12px;background:rgba(12,18,36,.9);
+  border:1px solid var(--line);border-bottom:3px solid var(--rc,#8fa7c4);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px}
+.cell .ci{font-size:42px;filter:drop-shadow(0 0 10px var(--rc))}
+.cell .cn{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.marker{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--gold);
+  box-shadow:0 0 14px var(--gold);z-index:2}
+.marker::before,.marker::after{content:'';position:absolute;left:50%;transform:translateX(-50%);
+  border:7px solid transparent}
+.marker::before{top:0;border-top-color:var(--gold)}
+.marker::after{bottom:0;border-bottom-color:var(--gold)}
+.case-actions{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px;flex-wrap:wrap}
+.case-result{position:absolute;inset:0;display:none;place-items:center;background:rgba(4,6,15,.88);backdrop-filter:blur(6px);border-radius:20px;z-index:5;text-align:center}
+.case-result.show{display:grid;animation:fadeUp .4s}
+.case-result .ci{font-size:74px;filter:drop-shadow(0 0 26px var(--rc))}
+.case-result h4{font-family:Orbitron;font-size:22px;margin:16px 0 6px;letter-spacing:.08em}
+.case-result .rn{color:var(--rc);font-size:13px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:24px}
+.case-result .row{display:flex;gap:12px;justify-content:center}
+
+/* ==== ИНВЕНТАРЬ ==== */
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;max-height:52vh;overflow:auto;padding:4px}
+.inv-item{background:rgba(12,18,36,.9);border:1px solid var(--line);border-bottom:3px solid var(--rc);border-radius:12px;padding:16px 10px;text-align:center}
+.inv-item .ci{font-size:34px;filter:drop-shadow(0 0 8px var(--rc))}
+.inv-item .cn{font-size:12px;margin:8px 0 10px;min-height:30px}
+.inv-item button{font-size:11px;color:var(--gold);border:1px solid rgba(255,194,77,.4);border-radius:8px;padding:6px 10px}
+.inv-item button:hover{background:rgba(255,194,77,.12)}
+.inv-empty{text-align:center;color:var(--muted);padding:40px 0}
+
+/* ==== PLAY-ЗАГЛУШКА ==== */
+.radar{width:120px;height:120px;margin:0 auto 22px;border-radius:50%;border:1px solid rgba(77,227,255,.4);position:relative;overflow:hidden}
+.radar::before{content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(77,227,255,.5),transparent 70%);animation:spin 2.2s linear infinite}
+.radar::after{content:'';position:absolute;inset:34%;border-radius:50%;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==== ТОСТЫ ==== */
+#toasts{position:fixed;right:20px;bottom:20px;z-index:100;display:flex;flex-direction:column;gap:10px}
+.toast{background:rgba(8,12,26,.95);border:1px solid var(--line);border-left:3px solid var(--cyan);
+  border-radius:12px;padding:14px 20px;font-size:14px;min-width:260px;animation:toastIn .35s cubic-bezier(.2,1.2,.4,1);backdrop-filter:blur(10px)}
+.toast.err{border-left-color:#ff5470}
+.toast.gold{border-left-color:var(--gold)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+
+@media(max-width:900px){nav{display:none}.gyro{display:none}}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="vignette"></div>
+
+<header>
+  <a class="logo" href="#home">ASTRA<span>PROTOCOL</span></a>
+  <nav>
+    <a href="#home">Главная</a>
+    <a href="#cases">Кейсы</a>
+    <a href="#shop">Магазин</a>
+    <a href="#about">Об игре</a>
+  </nav>
+  <div class="hud">
+    <button id="balChip" class="chip hidden" title="Баланс">✦ <b id="balVal">0</b></button>
+    <button id="invChip" class="chip hidden">Инвентарь · <b id="invCount">0</b></button>
+    <div class="user-wrap hidden" id="userWrap">
+      <button class="chip" id="userChip">👤</button>
+      <div class="menu" id="userMenu">
+        <button id="menuBonus">🎁 Ежедневный бонус</button>
+        <button id="menuOut">⎋ Выйти</button>
+      </div>
+    </div>
+    <button id="loginBtn" class="btn ghost small">Вход</button>
+    <button id="regBtn" class="btn primary small">Регистрация</button>
+  </div>
+</header>
+
+<main>
+<!-- ГЛАВНАЯ -->
+<section class="hero" id="home">
+  <div class="hero-art"><img src="assets/hero.jpg" alt=""></div>
+  <div class="gyro"><i></i><i></i><i></i><b class="core"></b></div>
+  <div class="cube"><b></b><b></b><b></b><b></b><b></b><b></b></div>
+  <div class="shard" style="left:16%;top:24%"></div>
+  <div class="shard" style="right:20%;bottom:26%;animation-delay:-3s"></div>
+  <div class="shard" style="left:30%;bottom:14%;animation-delay:-5s;width:16px;height:16px"></div>
+  <div class="hero-content">
+    <div class="tag">Браузерная космическая сага · Сезон 01</div>
+    <h1 id="heroTitle" data-text="ASTRA PROTOCOL">ASTRA PROTOCOL</h1>
+    <p class="sub">Исследуй 98 секторов галактики, строй флот, сражайся в реальном времени — прямо в браузере, без загрузок и клиентов.</p>
+    <div class="cta">
+      <button class="btn play" id="playBtn">▶&nbsp; Играть</button>
+      <a class="btn ghost" href="#cases">Открыть кейс</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>12 400+</b><span>пилотов онлайн</span></div>
+      <div class="stat"><b>98</b><span>секторов</span></div>
+      <div class="stat"><b>4.9★</b><span>рейтинг</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- КЕЙСЫ -->
+<section class="wrap" id="cases">
+  <div class="sec-head">
+    <div class="tag">// Грузовой отсек</div>
+    <h2 class="scramble" data-text="КАПСУЛЫ СНАБЖЕНИЯ">КАПСУЛЫ СНАБЖЕНИЯ</h2>
+    <p>Вскрывай капсулы, пойманные в дрейфующих туманностях. Внутри — модули, скины и ядра для твоего флота.</p>
+  </div>
+  <div class="cases-grid" id="casesGrid"></div>
+</section>
+
+<!-- МАГАЗИН -->
+<section class="wrap" id="shop">
+  <div class="sec-head">
+    <div class="tag">// Торговая станция</div>
+    <h2 class="scramble" data-text="МАГАЗИН">МАГАЗИН</h2>
+    <p>Кристаллы ✦ — внутренняя валюта. Пополнение проходит мгновенно и без скрытых комиссий.</p>
+  </div>
+  <div class="tabs">
+    <button data-tab="cur" class="active">💎 Кристаллы</button>
+    <button data-tab="loot"> Предметы</button>
+  </div>
+  <div class="tab-pane active" id="tab-cur"><div class="grid" id="curGrid"></div>
+    <p class="note">Цены указаны в рублях. Оплата — демо-режим: спиновения не происходит, кристаллы начисляются сразу.</p>
+  </div>
+  <div class="tab-pane" id="tab-loot"><div class="grid" id="lootGrid"></div>
+    <p class="note">Предметы покупаются за кристаллы ✦ и попадают в инвентарь.</p>
+  </div>
+</section>
+
+<!-- ОБ ИГРЕ -->
+<section class="wrap" id="about">
+  <div class="sec-head">
+    <div class="tag">// Бортовой журнал</div>
+    <h2 class="scramble" data-text="ОБ ИГРЕ">ОБ ИГРЕ</h2>
+  </div>
+  <div class="features">
+    <div class="feature tilt"><div class="icon">🌌</div><h3>Открытая галактика</h3><p>98 секторов с туманностями, чёрными дырами и аномалиями. Карта генерируется и живёт в реальном времени.</p></div>
+    <div class="feature tilt"><div class="icon">⚔️</div><h3>Бои в реальном времени</h3><p>Тактические сражения флотов прямо в браузере. Управляй манёврами, используй гравитацию планет как оружие.</p></div>
+    <div class="feature tilt"><div class="icon">🛸</div><h3>Сборка флота</h3><p>Модули и скины из капсул снабжения меняют характеристики и внешний вид кораблей. Торгуй на станции.</p></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <span>© 2026 ASTRA PROTOCOL. Все системы в норме.</span>
+  <span>Сборка 0.9.1 · демо-стенд</span>
+</footer>
+
+<!-- АВТОРИЗАЦИЯ -->
+<div class="modal" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="authTitle">ВХОД В СИСТЕМУ</h3>
+    <div class="socials">
+      <button class="soc-steam" data-soc="Steam">🎮 Steam</button>
+      <button class="soc-vk" data-soc="VK">🌐 VK ID</button>
+      <button class="soc-tg" data-soc="Telegram">✈️ Telegram</button>
+      <button class="soc-ds" data-soc="Discord">🎧 Discord</button>
+    </div>
+    <div class="divider">или по почте</div>
+    <div class="auth-tabs">
+      <button id="tabLogin" class="active">Вход</button>
+      <button id="tabReg">Регистрация</button>
+    </div>
+    <form id="authForm">
+      <div class="field"><input type="email" id="fEmail" placeholder="email@pilot.space" required></div>
+      <div class="field"><input type="password" id="fPass" placeholder="Пароль" minlength="6" required></div>
+      <div class="field hidden" id="nameField"><input type="text" id="fName" placeholder="Позывной пилота"></div>
+      <button class="btn primary" id="authSubmit">Войти</button>
+    </form>
+  </div>
+</div>
+
+<!-- ИГРАТЬ (ЗАГЛУШКА) -->
+<div class="modal" id="playModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <div class="radar"></div>
+    <h3>СТЫКОВКА С СЕРВЕРОМ…</h3>
+    <p class="note" style="margin-top:0">Клиент игры подключается на следующем этапе разработки. Эта кнопка — заглушка: оставь почту, и мы ping-анём тебя на старте открытой беты.</p>
+    <form id="betaForm" style="margin-top:18px">
+      <div class="field"><input type="email" placeholder="email@pilot.space" required></div>
+      <button class="btn primary">Встать в очередь беты</button>
+    </form>
+  </div>
+</div>
+
+<!-- КЕЙС -->
+<div class="modal" id="caseModal">
+  <div class="modal-box wide">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="caseTitle">КАПСУЛА</h3>
+    <div class="roulette" id="roulette">
+      <div class="marker"></div>
+      <div class="strip" id="strip"></div>
+    </div>
+    <div class="case-actions">
+      <span class="price" id="casePrice"></span>
+      <button class="btn primary" id="openBtn">Открыть</button>
+      <button class="btn ghost" id="fastBtn" title="Без анимации">⚡ Быстро</button>
+    </div>
+    <div class="case-result" id="caseResult">
+      <div>
+        <div class="ci" id="resIcon"></div>
+        <h4 id="resName"></h4>
+        <div class="rn" id="resRar"></div>
+        <div class="row">
+          <button class="btn primary small" id="resAgain">Ещё раз</button>
+          <button class="btn ghost small" id="resSell"></button>
+          <button class="btn ghost small" data-close>Забрать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ИНВЕНТАРЬ -->
+<div class="modal" id="invModal">
+  <div class="modal-box wide">
+    <button class="modal-close" data-close>✕</button>
+    <h3>ТРЮМ КОРАБЛЯ</h3>
+    <div class="inv-grid" id="invGrid"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ================= ДАННЫЕ ================= */
+const RAR = {
+  common:{name:'Обычный',   color:'var(--r-common)', hex:'#8fa7c4', sell:15},
+  rare:  {name:'Редкий',    color:'var(--r-rare)',   hex:'#4da3ff', sell:45},
+  epic:  {name:'Эпический', color:'var(--r-epic)',   hex:'#a06bff', sell:120},
+  legend:{name:'Легендарный',color:'var(--r-legend)',hex:'#ffc24d', sell:400},
+};
+const CASES = [
+  {id:'scout', name:'КАПСУЛА РАЗВЕДЧИКА', img:'assets/case-scout.jpg', price:100, acc:'#4de3ff', drop:[
+    {n:'Титановая обшивка', r:'common', w:30, icon:'🛡️'},
+    {n:'Ионный ускоритель', r:'common', w:25, icon:'🔩'},
+    {n:'Навигационный маяк', r:'rare', w:18, icon:'📡'},
+    {n:'Плазменный резак', r:'rare', w:12, icon:'🔫'},
+    {n:'Нейтронный щит', r:'epic', w:9, icon:'⚛️'},
+    {n:'Звёздный компас', r:'epic', w:4, icon:'🧭'},
+    {n:'Ядро сингулярности', r:'legend', w:2, icon:'💠'}]},
+  {id:'nebula', name:'ТУМАННОСТЬ', img:'assets/case-nebula.jpg', price:350, acc:'#a06bff', drop:[
+    {n:'Пыль кометы', r:'common', w:28, icon:'☄️'},
+    {n:'Криостатический контур', r:'common', w:24, icon:'❄️'},
+    {n:'Скин «Фиалковый шторм»', r:'rare', w:20, icon:'🎨'},
+    {n:'Гравитонный захват', r:'rare', w:13, icon:'🧲'},
+    {n:'Сердце туманности', r:'epic', w:10, icon:'💜'},
+    {n:'Аватар «Странница»', r:'epic', w:3.5, icon:'👩‍🚀'},
+    {n:'Корона пульсара', r:'legend', w:1.5, icon:'👑'}]},
+  {id:'singularity', name:'СИНГУЛЯРНОСТЬ', img:'assets/case-singularity.jpg', price:900, acc:'#ffc24d', drop:[
+    {n:'Осколок горизонта', r:'common', w:26, icon:'🪨'},
+    {n:'Золотая фольга реактора', r:'rare', w:26, icon:'✨'},
+    {n:'Скин «Солнечный разлом»', r:'rare', w:20, icon:'🌇'},
+    {n:'Кольцо аккреции', r:'epic', w:16, icon:'💫'},
+    {n:'Хронорезонатор', r:'epic', w:8, icon:'⏳'},
+    {n:'Око вечности', r:'legend', w:4, icon:'🔱'}]},
+];
+const CRYSTALS = [
+  {a:100,  b:0,    p:99},
+  {a:550,  b:50,   p:449},
+  {a:1200, b:150,  p:899},
+  {a:2600, b:450,  p:1699},
+  {a:7000, b:1600, p:3999},
+];
+const LOOT = [
+  {id:'dust',   n:'Звёздная пыль', d:'Мешочек пыли: +40 ✦ сразу при покупке', price:30,  icon:'✨', glow:'#4de3ff'},
+  {id:'boost',  n:'Бустер притяжения', d:'+25% к шансу редкого дропа на 1 час', price:120, icon:'🧲', glow:'#a06bff'},
+  {id:'token',  n:'Жетон капсулы', d:'Открывает любую капсулу бесплатно', price:250, icon:'🎟️', glow:'#ffc24d'},
+  {id:'skin1',  n:'Скин «Небула»', d:'Косметика для корпуса класса «Фрегат»', price:500, icon:'🌫️', glow:'#a06bff'},
+  {id:'skin2',  n:'Скин «Солнечный разлом»', d:'Легендарная раскраска с трещинами света', price:750, icon:'🌇', glow:'#ffc24d'},
+  {id:'avatar', n:'Аватар «Пустота»', d:'Анимированный портрет для профиля', price:400, icon:'🕳️', glow:'#4da3ff'},
+];
+
+/* ================= СОСТОЯНИЕ ================= */
+const DB = JSON.parse(localStorage.getItem('ap_users')||'{}');
+let S = JSON.parse(localStorage.getItem('ap_session')||'null') || {user:null, balance:500, inv:[]};
+function save(){
+  if(S.user && DB[S.user]){ DB[S.user].bal=S.balance; DB[S.user].inv=S.inv; localStorage.setItem('ap_users',JSON.stringify(DB)); }
+  localStorage.setItem('ap_session',JSON.stringify(S));
+}
+const $ = s=>document.querySelector(s);
+const fmt = n=>n.toLocaleString('ru-RU');
+
+/* ================= ТОСТЫ ================= */
+function toast(msg,type=''){
+  const t=document.createElement('div'); t.className='toast '+type; t.innerHTML=msg;
+  $('#toasts').appendChild(t); setTimeout(()=>{t.style.opacity=0;t.style.transition='.4s';setTimeout(()=>t.remove(),400)},3600);
+}
+
+/* ================= HUD ================= */
+function syncHUD(){
+  $('#balVal').textContent=fmt(S.balance);
+  $('#invCount').textContent=S.inv.length;
+  const authed=!!S.user;
+  $('#balChip').classList.toggle('hidden',!authed);
+  $('#invChip').classList.toggle('hidden',!authed);
+  $('#userWrap').classList.toggle('hidden',!authed);
+  $('#loginBtn').classList.toggle('hidden',authed);
+  $('#regBtn').classList.toggle('hidden',authed);
+  if(authed) $('#userChip').textContent='👤 '+S.user.split('@')[0];
+}
+
+/* ================= АВТОРИЗАЦИЯ ================= */
+let regMode=false;
+function openAuth(reg){ regMode=reg; paintAuth(); $('#authModal').classList.add('open'); }
+function paintAuth(){
+  $('#tabLogin').classList.toggle('active',!regMode);
+  $('#tabReg').classList.toggle('active',regMode);
+  $('#nameField').classList.toggle('hidden',!regMode);
+  $('#authSubmit').textContent=regMode?'Создать аккаунт':'Войти';
+  $('#authTitle').textContent=regMode?'РЕГИСТРАЦИЯ ПИЛОТА':'ВХОД В СИСТЕМУ';
+}
+$('#tabLogin').onclick=()=>{regMode=false;paintAuth()};
+$('#tabReg').onclick=()=>{regMode=true;paintAuth()};
+$('#loginBtn').onclick=()=>openAuth(false);
+$('#regBtn').onclick=()=>openAuth(true);
+
+function enterAccount(email,name){
+  if(!DB[email]) DB[email]={name:name||email.split('@')[0], pass:null, bal:500, inv:[], lastBonus:null};
+  S={user:email, balance:DB[email].bal, inv:DB[email].inv};
+  save(); syncHUD(); closeModal($('#authModal'));
+  toast('🚀 Добро пожаловать на борт, <b>'+DB[email].name+'</b>! Стартовый бонус: 500 ✦','gold');
+}
+$('#authForm').onsubmit=e=>{
+  e.preventDefault();
+  const em=$('#fEmail').value.trim().toLowerCase(), pw=$('#fPass').value, nm=$('#fName').value.trim();
+  if(regMode){
+    if(DB[em]) return toast('Этот email уже зарегистрирован','err');
+    DB[em]={name:nm||em.split('@')[0], pass:btoa(pw), bal:500, inv:[], lastBonus:null};
+    localStorage.setItem('ap_users',JSON.stringify(DB));
+    enterAccount(em);
+  }else{
+    const u=DB[em];
+    if(!u) return toast('Аккаунт не найден — зарегистрируйся','err');
+    if(u.pass && u.pass!==btoa(pw)) return toast('Неверный пароль','err');
+    enterAccount(em);
+  }
+};
+document.querySelectorAll('[data-soc]').forEach(b=>b.onclick=()=>{
+  const p=b.dataset.soc, em=p.toLowerCase()+'_pilot@sso';
+  enterAccount(em,'Пилот_'+p);
+});
+
+/* меню пользователя */
+$('#userChip').onclick=e=>{e.stopPropagation();$('#userMenu').classList.toggle('open')};
+document.addEventListener('click',()=>$('#userMenu').classList.remove('open'));
+$('#menuOut').onclick=()=>{ save(); S={user:null,balance:500,inv:[]}; save(); syncHUD(); toast('Система отстыкована. До встречи!'); };
+$('#menuBonus').onclick=()=>{
+  const today=new Date().toDateString();
+  if(DB[S.user].lastBonus===today) return toast('Бонус уже получен сегодня','err');
+  DB[S.user].lastBonus=today; S.balance+=100; save(); syncHUD();
+  toast('🎁 Ежедневный бонус: <b>+100 ✦</b>','gold');
+};
+
+/* ================= РЕНДЕР ВИТРИН ================= */
+function chances(c){
+  const total=c.drop.reduce((s,d)=>s+d.w,0), acc={};
+  c.drop.forEach(d=>acc[d.r]=(acc[d.r]||0)+d.w);
+  return Object.entries(acc).map(([r,w])=>`<span><i style="background:${RAR[r].hex}"></i>${Math.round(w/total*100)}%</span>`).join('');
+}
+$('#casesGrid').innerHTML=CASES.map(c=>`
+  <div class="case-card" style="--acc:${c.acc}">
+    <img src="${c.img}" alt="${c.name}" loading="lazy">
+    <h3>${c.name}</h3>
+    <div class="chances">${chances(c)}</div>
+    <div class="case-foot">
+      <span class="price">✦ ${c.price}</span>
+      <button class="btn primary small" onclick="openCase('${c.id}')">Открыть</button>
+    </div>
+  </div>`).join('');
+
+$('#curGrid').innerHTML=CRYSTALS.map((c,i)=>`
+  <div class="item" style="--glow:#4de3ff">
+    ${c.b?`<div class="bonus">+${c.b}</div>`:''}
+    <div class="icon">💎</div><h4>${fmt(c.a)} ✦</h4>
+    <p>${c.b?'Бонус сверху +'+fmt(c.b)+' ✦':'Базовый пакет кристаллов'}</p>
+    <button class="btn primary small" onclick="buyCrystals(${i})">${c.p} ₽</button>
+  </div>`).join('');
+
+$('#lootGrid').innerHTML=LOOT.map((l,i)=>`
+  <div class="item" style="--glow:${l.glow}">
+    <div class="icon">${l.icon}</div><h4>${l.n}</h4><p>${l.d}</p>
+    <button class="btn primary small" onclick="buyLoot(${i})">✦ ${l.price}</button>
+  </div>`).join('');
+
+/* вкладки магазина */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); $('#tab-'+b.dataset.tab).classList.add('active');
+});
+
+/* ================= ПОКУПКИ ================= */
+function requireAuth(){ if(!S.user){ toast('Нужен аккаунт — зарегистрируйся за 10 секунд','err'); openAuth(true); return false } return true }
+function buyCrystals(i){
+  if(!requireAuth())return;
+  const c=CRYSTALS[i]; S.balance+=c.a+c.b; save(); syncHUD();
+  toast('💎 Оплата прошла (демо): <b>+'+fmt(c.a+c.b)+' ✦</b>','gold');
+}
+function buyLoot(i){
+  if(!requireAuth())return;
+  const l=LOOT[i];
+  if(S.balance<l.price) return toast('Недостаточно кристаллов ✦','err');
+  S.balance-=l.price;
+  if(l.id==='dust'){ S.balance+=40; toast('✨ Пыль рассыпалась: <b>+40 ✦</b>','gold'); }
+  else { S.inv.push({id:l.id,n:l.n,r:'rare',icon:l.icon,v:Math.round(l.price/3)}); toast('📦 «'+l.n+'» — в трюме'); }
+  save(); syncHUD();
+}
+
+/* ================= КЕЙСЫ / РУЛЕТКА ================= */
+let curCase=null, spinning=false, lastWin=null;
+const CELL=152, WIN_IDX=44, CELLS=60;
+function pickDrop(c){ const t=c.drop.reduce((s,d)=>s+d.w,0); let r=Math.random()*t;
+  for(const d of c.drop){ if((r-=d.w)<0) return d } return c.drop[0]; }
+const cellHTML=d=>`<div class="cell" style="--rc:${RAR[d.r].hex}"><div class="ci">${d.icon}</div><div class="cn">${d.n}</div></div>`;
+
+function openCase(id){
+  curCase=CASES.find(c=>c.id===id);
+  $('#caseTitle').textContent=curCase.name;
+  $('#casePrice').textContent='✦ '+curCase.price;
+  $('#caseResult').classList.remove('show');
+  const strip=$('#strip');
+  strip.style.transition='none'; strip.style.transform='translateX(0)';
+  strip.innerHTML=Array.from({length:14},()=>cellHTML(pickDrop(curCase))).join('');
+  $('#caseModal').classList.add('open');
+}
+$('#openBtn').onclick=()=>startSpin(false);
+$('#fastBtn').onclick=()=>startSpin(true);
+
+function startSpin(fast){
+  if(spinning||!curCase)return;
+  let useToken=false; const ti=S.inv.findIndex(i=>i.id==='token');
+  if(ti>-1) useToken=true;
+  else if(S.balance<curCase.price) return toast('Недостаточно ✦ — загляни в магазин','err');
+  if(useToken){ S.inv.splice(ti,1); toast('🎟️ Жетон использован'); } else { S.balance-=curCase.price; }
+  save(); syncHUD();
+
+  spinning=true; $('#openBtn').disabled=true; $('#caseResult').classList.remove('show');
+  const win=pickDrop(curCase), cells=[];
+  for(let i=0;i<CELLS;i++) cells.push(pickDrop(curCase));
+  cells[WIN_IDX]=win;
+  const strip=$('#strip');
+  strip.innerHTML=cells.map(cellHTML).join('');
+  strip.style.transition='none'; strip.style.transform='translateX(0)';
+  const boxW=$('#roulette').offsetWidth;
+  const x=WIN_IDX*CELL+70-boxW/2+(Math.random()*70-35);
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(fast){ strip.style.transition='transform .6s ease-out'; }
+    else{ strip.style.transition='transform 6.4s cubic-bezier(.12,.65,.08,1)'; }
+    strip.style.transform=`translateX(${-x}px)`;
+  }));
+  strip.ontransitionend=()=>{ spinning=false; $('#openBtn').disabled=false; finish(win); };
+}
+function finish(w){
+  lastWin=w;
+  S.inv.push({id:curCase.id+'_'+Date.now(), n:w.n, r:w.r, icon:w.icon, v:RAR[w.r].sell});
+  save(); syncHUD();
+  $('#resIcon').textContent=w.icon; $('#resIcon').style.setProperty('--rc',RAR[w.r].hex);
+  $('#resName').textContent=w.n;
+  $('#resRar').textContent=RAR[w.r].name; $('#resRar').style.color=RAR[w.r].hex;
+  $('#resSell').textContent='Продать +'+RAR[w.r].sell+' ✦';
+  $('#caseResult').classList.add('show');
+  if(w.r==='legend') toast('🌟 ЛЕГЕНДАРНАЯ НАХОДКА: «'+w.n+'»!','gold');
+}
+$('#resAgain').onclick=()=>{ $('#caseResult').classList.remove('show'); startSpin(false); };
+$('#resSell').onclick=()=>{
+  if(!lastWin)return;
+  const idx=S.inv.map(i=>i.n).lastIndexOf(lastWin.n);
+  if(idx>-1)S.inv.splice(idx,1);
+  S.balance+=RAR[lastWin.r].sell; save(); syncHUD();
+  toast('♻️ Продано: <b>+'+RAR[lastWin.r].sell+' ✦</b>','gold');
+  $('#caseResult').classList.remove('show');
+};
+
+/* ================= ИНВЕНТАРЬ ================= */
+$('#invChip').onclick=()=>{
+  const g=$('#invGrid');
+  if(!S.inv.length) g.innerHTML='<div class="inv-empty">Трюм пуст. Открой капсулу снабжения! 🛰️</div>';
+  else g.innerHTML=S.inv.map((it,i)=>`
+    <div class="inv-item" style="--rc:${(RAR[it.r]||RAR.rare).hex}">
+      <div class="ci">${it.icon}</div><div class="cn">${it.n}</div>
+      <button onclick="sellInv(${i})">Продать +${it.v} ✦</button>
+    </div>`).join('');
+  $('#invModal').classList.add('open');
+};
+function sellInv(i){
+  const it=S.inv[i]; if(!it)return;
+  S.inv.splice(i,1); S.balance+=it.v; save(); syncHUD();
+  toast('♻️ «'+it.n+'» продан: <b>+'+it.v+' ✦</b>','gold');
+  $('#invChip').onclick();
+}
+
+/* ================= МОДАЛКИ / ПРОЧЕЕ ================= */
+function closeModal(m){ m.classList.remove('open') }
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m&&!spinning) closeModal(m); });
+  m.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{ if(!spinning) closeModal(m) });
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!spinning) document.querySelectorAll('.modal.open').forEach(closeModal) });
+$('#playBtn').onclick=()=>$('#playModal').classList.add('open');
+$('#betaForm').onsubmit=e=>{ e.preventDefault(); toast('📡 Ты в очереди беты. Сигнал придёт на почту!','gold'); closeModal($('#playModal')); };
+
+/* ================= ЭФФЕКТЫ ================= */
+function scramble(el,dur=1100){
+  const chars='!<>-_\\/[]{}—=+*^?#01', fin=el.dataset.text||el.textContent, t0=performance.now();
+  (function fr(t){
+    const p=Math.min(1,(t-t0)/dur); let out='';
+    for(let i=0;i<fin.length;i++){
+      if(fin[i]===' '){out+=' ';continue}
+      out+= i<p*fin.length ? fin[i] : chars[Math.random()*chars.length|0];
+    }
+    el.textContent=out;
+    if(p<1)requestAnimationFrame(fr); else el.textContent=fin;
+  })(t0);
+}
+scramble($('#heroTitle'),1400);
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ scramble(e.target); io.unobserve(e.target);} }),{threshold:.6});
+document.querySelectorAll('.scramble').forEach(el=>io.observe(el));
+
+document.querySelectorAll('.tilt').forEach(c=>{
+  c.onmousemove=e=>{ const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    c.style.transform=`perspective(700px) rotateY(${x*10}deg) rotateX(${-y*10}deg) translateY(-4px)`; };
+  c.onmouseleave=()=>c.style.transform='';
+});
+
+/* звёздное небо + метеоры */
+const cv=$('#stars'), ctx=cv.getContext('2d'); let W,H,stars=[],meteors=[];
+function resize(){ W=cv.width=innerWidth; H=cv.height=innerHeight;
+  stars=Array.from({length:Math.min(260,W/5)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*1.5+.3,tw:Math.random()*6.28})); }
+addEventListener('resize',resize); resize();
+setInterval(()=>{ if(!document.hidden) meteors.push({x:W*.3+Math.random()*W*.7,y:Math.random()*H*.3,vx:-(5+Math.random()*5),vy:3+Math.random()*2,life:1}); },6000);
+(function loop(t){
+  ctx.clearRect(0,0,W,H);
+  for(const s of stars){
+    s.y+=s.z*.06; if(s.y>H)s.y=0;
+    const a=.35+.65*Math.abs(Math.sin(t/900+s.tw));
+    ctx.globalAlpha=a; ctx.fillStyle=s.z>1.2?'#cfeaff':'#8fa7c4';
+    ctx.fillRect(s.x,s.y,s.z,s.z);
+  }
+  ctx.globalAlpha=1;
+  meteors=meteors.filter(m=>m.life>0);
+  for(const m of meteors){
+    m.x+=m.vx; m.y+=m.vy; m.life-=.015;
+    const g=ctx.createLinearGradient(m.x,m.y,m.x-m.vx*10,m.y-m.vy*10);
+    g.addColorStop(0,`rgba(200,240,255,${m.life})`); g.addColorStop(1,'transparent');
+    ctx.strokeStyle=g; ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(m.x,m.y); ctx.lineTo(m.x-m.vx*10,m.y-m.vy*10); ctx.stroke();
+  }
+  requestAnimationFrame(loop);
+})(0);
+
+syncHUD();
+</script>
+</body>
+</html>
